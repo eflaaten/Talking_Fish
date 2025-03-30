@@ -5,7 +5,7 @@ Readme
 
 # 🐠 Talking Fish (Billy Bass) with AI & Voice!
 
-Welcome to my fun little Raspberry Pi project! This is an attempt to replicate a funny Billy Bass project I saw nline, bringing the classic animatronic *Billy the Big Mouth Bass* to life using AI, speech recognition, and text-to-speech. 🎤🔊
+Welcome to my fun little Raspberry Pi project! This is an attempt to replicate a funny Billy Bass project I saw online, bringing the classic animatronic *Billy the Big Mouth Bass* to life using ChatGPT, speech recognition, and text-to-speech. 🎤🔊
 
 The goal is to create an interactive, voice-activated fish that listens, responds with a voice (via ElevenLabs), and animates while speaking. Powered by GPT-4o for smart replies and ElevenLabs for real-time text-to-speech, Billy becomes a quirky AI assistant with personality.
 
