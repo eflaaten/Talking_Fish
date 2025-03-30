@@ -1,0 +1,7 @@
+openai
+pyaudio
+webrtcvad
+websockets
+numpy
+python-dotenv
+lgpio
