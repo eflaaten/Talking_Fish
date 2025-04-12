@@ -24,18 +24,21 @@ async def continuous_billy_animation():
 
     try:
         while True:
-            GPIO.gpio_write(MOUTH_PIN, 1)
+            # 👄 Mouth flap
+            GPIO.gpio_write(h, MOUTH_PIN, 1)
             await asyncio.sleep(random.uniform(0.03, 0.08))
-            GPIO.gpio_write(MOUTH_PIN, 0)
+            GPIO.gpio_write(h, MOUTH_PIN, 0)
             await asyncio.sleep(random.uniform(0.03, 0.1))
 
+            # 🐟 Tail flip every 2 seconds
             if asyncio.get_event_loop().time() >= swap_time:
                 tail_direction = not tail_direction
-                GPIO.gpio_write(TAIL_PIN, int(tail_direction))
+                GPIO.gpio_write(h, TAIL_PIN, int(tail_direction))
                 swap_time = asyncio.get_event_loop().time() + 2
+
     except asyncio.CancelledError:
-        GPIO.gpio_write(MOUTH_PIN, 0)
-        GPIO.gpio_write(TAIL_PIN, 0)
+        GPIO.gpio_write(h, MOUTH_PIN, 0)
+        GPIO.gpio_write(h, TAIL_PIN, 0)
         print("🛑 Animation cancelled.")
 
 # 🧠 Voice interrupt listener
