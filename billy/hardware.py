@@ -2,14 +2,19 @@ import time
 import lgpio as GPIO
 
 # 📌 GPIO Pin Assignments
-MOUTH_PIN = 17
-TAIL_PIN = 27
-BUTTON_PIN = 17  # You can change if needed
+# 📌 GPIO Pin Assignments (matching your old working setup)
+BUTTON_PIN = 17
+MOUTH_PIN = 22
+TAIL_PIN = 23
+TAIL_PIN_2 = 24  # <- THIS was missing in the new version!
 
-# 🛠 GPIO Setup
+# 🧠 Open GPIO chip
 h = GPIO.gpiochip_open(0)
+
+# 🧠 Setup GPIO pins
 GPIO.gpio_claim_output(h, MOUTH_PIN)
 GPIO.gpio_claim_output(h, TAIL_PIN)
+GPIO.gpio_claim_output(h, TAIL_PIN_2)
 GPIO.gpio_claim_input(h, BUTTON_PIN)
 
 # 🎬 Button Press Waiter

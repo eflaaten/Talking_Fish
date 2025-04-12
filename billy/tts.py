@@ -14,7 +14,7 @@ from billy.config import (
     ELEVENLABS_API_KEY, VOICE_ID, interrupt_requested,
     format, channels, sample_rate, chunk_duration_ms, vad
 )
-from billy.hardware import GPIO, MOUTH_PIN, TAIL_PIN, h
+from billy.hardware import GPIO, MOUTH_PIN, TAIL_PIN, TAIL_PIN_2, h
 from billy.gpt import text_chunker
 
 # 🐟 Flap mouth & tail until cancelled
@@ -34,8 +34,9 @@ async def continuous_billy_animation():
             if asyncio.get_event_loop().time() >= swap_time:
                 tail_direction = not tail_direction
                 GPIO.gpio_write(h, TAIL_PIN, int(tail_direction))
+                GPIO.gpio_write(h, TAIL_PIN_2, int(not tail_direction))  # 🔁 flip both
                 swap_time = asyncio.get_event_loop().time() + 2
-
+                
     except asyncio.CancelledError:
         GPIO.gpio_write(h, MOUTH_PIN, 0)
         GPIO.gpio_write(h, TAIL_PIN, 0)
