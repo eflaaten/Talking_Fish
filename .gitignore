@@ -1,0 +1,62 @@
+# 🍓 Python cache and compiled files
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# 🧪 Virtual environments
+env/
+venv/
+ENV/
+.venv/
+
+# 📦 Dependency files (pip freeze or wheels)
+*.whl
+
+# 🔑 Secrets and config
+.env
+*.key
+*.pem
+*.p12
+
+# 🎙 Audio files
+*.wav
+*.mp3
+
+# 💻 IDE/editor junk
+.vscode/
+.idea/
+*.swp
+*~
+
+# 📄 Logs & misc
+*.log
+.DS_Store
+
+# 🐟 Output files
+recording.wav
+input.wav
+
+# ⛵ Local test scripts (optional, if you want to ignore messy tests)
+test*.py
+rt*.py
+confspeak_test.py
+import pyaudio.py
+o.py
+README.md
+requirements.txt
+sox.py
+t.py
+t1_interrupt.py
+t22.py
+te
+te.py
+test40d.py.save
+test51.py.save
+
+# Old Files
+Old Billy/
+
