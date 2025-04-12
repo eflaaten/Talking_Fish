@@ -33,3 +33,6 @@ vad = webrtcvad.Vad(1)
 
 # 🧠 Interrupt Flag
 interrupt_requested = False
+
+import os
+print("🔑 OPENAI Key starts with:", os.getenv("OPENAI_API_KEY", "Not loaded")[:10])
