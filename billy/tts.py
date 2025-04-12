@@ -14,7 +14,7 @@ from billy.config import (
     ELEVENLABS_API_KEY, VOICE_ID, interrupt_requested,
     format, channels, sample_rate, chunk_duration_ms, vad
 )
-from billy.hardware import GPIO, MOUTH_PIN, TAIL_PIN
+from billy.hardware import GPIO, MOUTH_PIN, TAIL_PIN, h
 from billy.gpt import text_chunker
 
 # 🐟 Flap mouth & tail until cancelled
