@@ -8,6 +8,7 @@ import asyncio
 import websockets
 import pyaudio
 import random
+import numpy as np
 from billy.config import (
     ELEVENLABS_API_KEY, VOICE_ID,
     format, channels, sample_rate, chunk_duration_ms, vad
@@ -36,31 +37,40 @@ async def continuous_billy_animation():
                 swap_time = asyncio.get_event_loop().time() + 2
                 
     except asyncio.CancelledError:
-        # Reset GPIO pins for mouth and tail motors
         GPIO.gpio_write(h, MOUTH_PIN, 0)
         GPIO.gpio_write(h, TAIL_PIN, 0)
-        GPIO.gpio_write(h, TAIL_PIN_2, 0)
         print("🛑 Animation cancelled.")
 
 # 🔊 Play audio while animating
 async def play_audio(audio_stream):
-    animation_task = asyncio.create_task(continuous_billy_animation())
+    """
+    Plays audio chunks while analyzing their volume to control mouth animation.
+    """
     audio = pyaudio.PyAudio()
     stream = audio.open(format=pyaudio.paInt16, channels=1, rate=22050, output=True)
 
     try:
         async for chunk in audio_stream:
+            # Play the audio chunk
             stream.write(chunk)
+
+            # 📊 Analyze volume from audio chunk
+            audio_np = np.frombuffer(chunk, dtype=np.int16)
+            volume = np.sqrt(np.mean(audio_np**2))  # RMS volume calculation
+
+            # 👄 Open/close mouth based on volume threshold
+            if volume > 30:  # 🔧 Lower threshold for more frequent movement
+                GPIO.gpio_write(h, MOUTH_PIN, 1)  # Open mouth
+            else:
+                GPIO.gpio_write(h, MOUTH_PIN, 0)  # Close mouth
+
     finally:
+        # 🛑 Ensure mouth is closed when audio stops
+        GPIO.gpio_write(h, MOUTH_PIN, 0)
         stream.stop_stream()
         stream.close()
         audio.terminate()
-        animation_task.cancel()
-        try:
-            await animation_task
-        except asyncio.CancelledError:
-            pass
-        print("�� Audio stream closed.")
+        print("🔇 Audio stream closed.")
 
 # 🎙 ElevenLabs Real-Time Speech
 async def elevenlabs_stream(text_iterator):
@@ -75,7 +85,7 @@ async def elevenlabs_stream(text_iterator):
             "voice_settings": {"stability": 0.5, "similarity_boost": 0.5},
             "generation_config": {"chunk_length_schedule": [50]},
             "xi_api_key": ELEVENLABS_API_KEY,
-            "model_id": "eleven_flash_v2_5" #"eleven_turbo_v2"
+            "model_id": "eleven_turbo_v2"
         }))
 
         # 📥 Audio chunks from ElevenLabs
