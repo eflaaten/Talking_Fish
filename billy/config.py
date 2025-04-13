@@ -1,7 +1,6 @@
 # This file holds:
 # API keys
 # Global settings for audio & voice activity detection
-# The shared interrupt_requested flag
 
 import os
 import collections
@@ -30,9 +29,6 @@ channels = 1
 frames = collections.deque()
 threshold = 1000
 vad = webrtcvad.Vad(1)
-
-# 🧠 Interrupt Flag
-interrupt_requested = False
 
 import os
 print("🔑 OPENAI Key starts with:", os.getenv("OPENAI_API_KEY", "Not loaded")[:10])

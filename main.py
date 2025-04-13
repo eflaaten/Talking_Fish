@@ -7,11 +7,21 @@ import asyncio
 
 async def main():
     while True:
-        wait_for_button()
-        prompt = await record_and_transcribe()
-        print(f"🧠 GPT prompt: {prompt}")
-        text_gen = await ask_billy(prompt)
-        await elevenlabs_stream(text_gen)
+        wait_for_button()  # Wait for the button press to start
+        try:
+            while True:
+                try:
+                    # Set a timeout for listening
+                    prompt = await asyncio.wait_for(record_and_transcribe(), timeout=20)
+                    print(f"🧠 GPT prompt: {prompt}")
+                    text_gen = await ask_billy(prompt)
+                    await elevenlabs_stream(text_gen)
+                except asyncio.TimeoutError:
+                    print("⏳ No input detected for 20 seconds. Returning to button press.")
+                    break
+        except KeyboardInterrupt:
+            print("🛑 Shutting down...")
+            break
 
 if __name__ == "__main__":
     try:
