@@ -18,27 +18,32 @@ from billy.gpt import text_chunker
 
 # 🐟 Flap mouth & tail until cancelled
 async def continuous_billy_animation():
+    """
+    Continuously animates the mouth and tail until canceled.
+    """
     tail_direction = True
-    swap_time = asyncio.get_event_loop().time() + 2
+    swap_time = asyncio.get_event_loop().time() + 1  # Flip tail every 1 second
 
     try:
         while True:
-            # 👄 Mouth flap
+            # 👄 Mouth flap more frequently
             GPIO.gpio_write(h, MOUTH_PIN, 1)
-            await asyncio.sleep(random.uniform(0.03, 0.08))
+            await asyncio.sleep(0.01)  # Faster mouth movement
             GPIO.gpio_write(h, MOUTH_PIN, 0)
-            await asyncio.sleep(random.uniform(0.03, 0.1))
+            await asyncio.sleep(0.01)  # Shorter pause
 
-            # 🐟 Tail flip every 2 seconds
+            # 🐟 Tail flip every 1 second
             if asyncio.get_event_loop().time() >= swap_time:
                 tail_direction = not tail_direction
                 GPIO.gpio_write(h, TAIL_PIN, int(tail_direction))
                 GPIO.gpio_write(h, TAIL_PIN_2, int(not tail_direction))  # 🔁 flip both
-                swap_time = asyncio.get_event_loop().time() + 2
-                
+                swap_time = asyncio.get_event_loop().time() + 1
+
     except asyncio.CancelledError:
+        # Reset GPIO pins for mouth and tail motors
         GPIO.gpio_write(h, MOUTH_PIN, 0)
         GPIO.gpio_write(h, TAIL_PIN, 0)
+        GPIO.gpio_write(h, TAIL_PIN_2, 0)
         print("🛑 Animation cancelled.")
 
 # 🔊 Play audio while animating
@@ -60,9 +65,11 @@ async def play_audio(audio_stream):
 
             # 👄 Open/close mouth based on volume threshold
             if volume > 30:  # 🔧 Lower threshold for more frequent movement
-                GPIO.gpio_write(h, MOUTH_PIN, 1)  # Open mouth
-            else:
-                GPIO.gpio_write(h, MOUTH_PIN, 0)  # Close mouth
+                for _ in range(2):  # Open and close mouth twice per chunk
+                    GPIO.gpio_write(h, MOUTH_PIN, 1)  # Open mouth
+                    await asyncio.sleep(0.02)  # Shorter duration for quick movement
+                    GPIO.gpio_write(h, MOUTH_PIN, 0)  # Close mouth
+                    await asyncio.sleep(0.02)  # Shorter pause
 
     finally:
         # 🛑 Ensure mouth is closed when audio stops
@@ -105,7 +112,17 @@ async def elevenlabs_stream(text_iterator):
                 await ws.send(json.dumps({"text": text, "try_trigger_generation": True}))
             await ws.send(json.dumps({"text": ""}))
 
-        await asyncio.gather(
-            play_audio(audio_listener()),
-            stream_text()
-        )
+        # Run audio playback and animations concurrently
+        animation_task = asyncio.create_task(continuous_billy_animation())
+        try:
+            await asyncio.gather(
+                play_audio(audio_listener()),
+                stream_text()
+            )
+        finally:
+            # Ensure the animation task is canceled when done
+            animation_task.cancel()
+            try:
+                await animation_task
+            except asyncio.CancelledError:
+                pass
