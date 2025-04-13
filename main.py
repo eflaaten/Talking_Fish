@@ -12,13 +12,14 @@ async def main():
             while True:
                 try:
                     # Set a timeout for listening
+                    print("🎤 Listening with VAD...")
                     prompt = await asyncio.wait_for(record_and_transcribe(), timeout=20)
                     print(f"🧠 GPT prompt: {prompt}")
                     text_gen = await ask_billy(prompt)
                     await elevenlabs_stream(text_gen)
                 except asyncio.TimeoutError:
                     print("⏳ No input detected for 20 seconds. Returning to button press.")
-                    break
+                    break  # Exit the inner loop and return to waiting for button press
         except KeyboardInterrupt:
             print("🛑 Shutting down...")
             break

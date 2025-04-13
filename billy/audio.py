@@ -18,42 +18,44 @@ async def record_and_transcribe():
     stream = audio.open(format=format, channels=channels, rate=sample_rate, input=True,
                         frames_per_buffer=int(sample_rate * chunk_duration_ms / 1000))
 
-    speaking = False
-    num_silent_chunks = 0
-    max_silent_chunks = int(silence_duration_ms / chunk_duration_ms)
+    try:
+        speaking = False
+        num_silent_chunks = 0
+        max_silent_chunks = int(silence_duration_ms / chunk_duration_ms)
 
-    print("🎤 Listening with VAD...")
-    while True:
-        chunk = stream.read(int(sample_rate * chunk_duration_ms / 1000))
-        volume = audioop.rms(chunk, 2)
-        is_speech = vad.is_speech(chunk, sample_rate) and volume > threshold
+        print("🎤 Listening with VAD...")
+        while True:
+            chunk = stream.read(int(sample_rate * chunk_duration_ms / 1000))
+            volume = audioop.rms(chunk, 2)
+            is_speech = vad.is_speech(chunk, sample_rate) and volume > threshold
 
-        if speaking:
-            frames.append(chunk)
-            if not is_speech:
-                num_silent_chunks += 1
-                if num_silent_chunks > max_silent_chunks:
-                    break
-            else:
-                num_silent_chunks = 0
-        else:
-            if is_speech:
-                speaking = True
+            if speaking:
                 frames.append(chunk)
+                if not is_speech:
+                    num_silent_chunks += 1
+                    if num_silent_chunks > max_silent_chunks:
+                        break
+                else:
+                    num_silent_chunks = 0
+            else:
+                if is_speech:
+                    speaking = True
+                    frames.append(chunk)
 
-    filename = "recording.wav"
-    with wave.open(filename, "wb") as wf:
-        wf.setnchannels(channels)
-        wf.setsampwidth(audio.get_sample_size(format))
-        wf.setframerate(sample_rate)
-        wf.writeframes(b''.join(frames))
+        filename = "recording.wav"
+        with wave.open(filename, "wb") as wf:
+            wf.setnchannels(channels)
+            wf.setsampwidth(audio.get_sample_size(format))
+            wf.setframerate(sample_rate)
+            wf.writeframes(b''.join(frames))
 
-    stream.stop_stream()
-    stream.close()
-    audio.terminate()
+        print("📝 Transcribing...")
+        with open(filename, "rb") as f:
+            transcript = sclient.audio.transcriptions.create(model="whisper-1", file=f)
 
-    print("📝 Transcribing...")
-    with open(filename, "rb") as f:
-        transcript = sclient.audio.transcriptions.create(model="whisper-1", file=f)
-
-    return transcript.text
+        return transcript.text
+    finally:
+        # Ensure proper cleanup
+        stream.stop_stream()
+        stream.close()
+        audio.terminate()

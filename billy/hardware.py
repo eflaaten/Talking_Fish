@@ -17,6 +17,11 @@ GPIO.gpio_claim_output(h, TAIL_PIN)
 GPIO.gpio_claim_output(h, TAIL_PIN_2)
 GPIO.gpio_claim_input(h, BUTTON_PIN)
 
+# Set default states for outputs
+GPIO.gpio_write(h, MOUTH_PIN, 0)  # Mouth motor off
+GPIO.gpio_write(h, TAIL_PIN, 0)   # Tail motor off
+GPIO.gpio_write(h, TAIL_PIN_2, 0) # Tail motor off
+
 # 🎬 Button Press Waiter
 def wait_for_button():
     print("🔧 Waiting for button press...")

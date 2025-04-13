@@ -36,8 +36,10 @@ async def continuous_billy_animation():
                 swap_time = asyncio.get_event_loop().time() + 2
                 
     except asyncio.CancelledError:
+        # Reset GPIO pins for mouth and tail motors
         GPIO.gpio_write(h, MOUTH_PIN, 0)
         GPIO.gpio_write(h, TAIL_PIN, 0)
+        GPIO.gpio_write(h, TAIL_PIN_2, 0)
         print("🛑 Animation cancelled.")
 
 # 🔊 Play audio while animating
@@ -73,7 +75,7 @@ async def elevenlabs_stream(text_iterator):
             "voice_settings": {"stability": 0.5, "similarity_boost": 0.5},
             "generation_config": {"chunk_length_schedule": [50]},
             "xi_api_key": ELEVENLABS_API_KEY,
-            "model_id": "eleven_turbo_v2"
+            "model_id": "eleven_flash_v2_5" #"eleven_turbo_v2"
         }))
 
         # 📥 Audio chunks from ElevenLabs
