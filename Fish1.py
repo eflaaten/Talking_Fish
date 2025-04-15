@@ -27,11 +27,11 @@ sclient = OpenAI(api_key=OPENAI_API_KEY)
 
 # 🪛 GPIO Setup
 MOUTH_PIN = 17
-HEAD_PIN = 27
+TAIL_PIN = 27
 BUTTON_PIN = 17
 h = GPIO.gpiochip_open(0)
 GPIO.gpio_claim_output(h, MOUTH_PIN)
-GPIO.gpio_claim_output(h, HEAD_PIN)
+GPIO.gpio_claim_output(h, TAIL_PIN)
 GPIO.gpio_claim_input(h, BUTTON_PIN)
 
 # Add inside your main() before the loop starts:
@@ -66,10 +66,10 @@ def wait_for_button():
 async def animate_billy(duration=6):
     print(f"🐟 Animating Billy for {duration:.2f} seconds...")
     GPIO.gpio_write(h, MOUTH_PIN, 1)
-    GPIO.gpio_write(h, HEAD_PIN, 1)
+    GPIO.gpio_write(h, TAIL_PIN, 1)
     await asyncio.sleep(duration)
     GPIO.gpio_write(h, MOUTH_PIN, 0)
-    GPIO.gpio_write(h, HEAD_PIN, 0)
+    GPIO.gpio_write(h, TAIL_PIN, 0)
 
 # === Stream Audio via PyAudio ===
 async def stream_audio(audio_chunks):
