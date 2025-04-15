@@ -5,22 +5,22 @@ import lgpio as GPIO
 # 📌 GPIO Pin Assignments (matching your old working setup)
 BUTTON_PIN = 17
 MOUTH_PIN = 22
-TAIL_PIN = 23
-TAIL_PIN_2 = 24  # <- THIS was missing in the new version!
+HEAD_PIN = 23
+HEAD_PIN_2 = 24  # <- THIS was missing in the new version!
 
 # 🧠 Open GPIO chip
 h = GPIO.gpiochip_open(0)
 
 # 🧠 Setup GPIO pins
 GPIO.gpio_claim_output(h, MOUTH_PIN)
-GPIO.gpio_claim_output(h, TAIL_PIN)
-GPIO.gpio_claim_output(h, TAIL_PIN_2)
+GPIO.gpio_claim_output(h, HEAD_PIN)
+GPIO.gpio_claim_output(h, HEAD_PIN_2)
 GPIO.gpio_claim_input(h, BUTTON_PIN)
 
 # Set default states for outputs
 GPIO.gpio_write(h, MOUTH_PIN, 0)  # Mouth motor off
-GPIO.gpio_write(h, TAIL_PIN, 0)   # Tail motor off
-GPIO.gpio_write(h, TAIL_PIN_2, 0) # Tail motor off
+GPIO.gpio_write(h, HEAD_PIN, 0)   # Tail motor off
+GPIO.gpio_write(h, HEAD_PIN_2, 0) # Tail motor off
 
 # 🎬 Button Press Waiter
 def wait_for_button():
