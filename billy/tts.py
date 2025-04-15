@@ -24,19 +24,25 @@ async def continuous_billy_animation():
     GPIO.gpio_write(h, TAIL_PIN, 1)
     GPIO.gpio_write(h, TAIL_PIN_2, 0)
     next_swap = asyncio.get_event_loop().time() + random.uniform(3, 6)
+    tail_state = True  # True = TAIL_PIN, False = TAIL_PIN_2
 
     try:
         while True:
-            await asyncio.sleep(0.05)  # Just yield control, no mouth movement here
+            await asyncio.sleep(0.05)  # Just yield control
 
             now = asyncio.get_event_loop().time()
             if now >= next_swap:
-                # Flip to TAIL_PIN_2 for 1-2 seconds, then back to TAIL_PIN
-                GPIO.gpio_write(h, TAIL_PIN, 0)
-                GPIO.gpio_write(h, TAIL_PIN_2, 1)
-                await asyncio.sleep(random.uniform(1, 2))
-                GPIO.gpio_write(h, TAIL_PIN_2, 0)
-                GPIO.gpio_write(h, TAIL_PIN, 1)
+                if tail_state:
+                    # Turn off head (TAIL_PIN)
+                    GPIO.gpio_write(h, TAIL_PIN, 0)
+                    await asyncio.sleep(random.uniform(1, 2))  # Pause before tail
+                    GPIO.gpio_write(h, TAIL_PIN_2, 1)
+                else:
+                    # Turn off tail (TAIL_PIN_2)
+                    GPIO.gpio_write(h, TAIL_PIN_2, 0)
+                    await asyncio.sleep(random.uniform(0.5, 1))  # Pause before head
+                    GPIO.gpio_write(h, TAIL_PIN, 1)
+                tail_state = not tail_state
                 next_swap = now + random.uniform(3, 5)
 
     except asyncio.CancelledError:
@@ -45,16 +51,46 @@ async def continuous_billy_animation():
         GPIO.gpio_write(h, TAIL_PIN_2, 0)
         print("🛑 Animation cancelled.")
 
-# 🦷 Random mouth flap task
+# 🦷 Jittery, random mouth flap task
 async def random_mouth_flap():
     try:
         while True:
-            print(f"OPEN {time.time()}")
+            # Randomize open duration (short, normal, or long)
+            open_time = random.choices(
+                [random.uniform(0.03, 0.08), random.uniform(0.09, 0.18), random.uniform(0.18, 0.35)],
+                weights=[0.3, 0.6, 0.1]
+            )[0]
+            # Occasionally jitter mid-flap
+            if random.random() < 0.2:
+                open_time += random.uniform(-0.02, 0.02)
+                open_time = max(0.02, open_time)
+
             GPIO.gpio_write(h, MOUTH_PIN, 1)
-            await asyncio.sleep(random.uniform(0.05, 0.1))
-            print(f"CLOSE {time.time()}")
+            print(f"OPEN {time.time()} for {open_time:.3f}s")
+            await asyncio.sleep(open_time)
+
+            # Sometimes do a double-flap (quick close/open)
+            if random.random() < 0.15:
+                GPIO.gpio_write(h, MOUTH_PIN, 0)
+                await asyncio.sleep(random.uniform(0.02, 0.06))
+                GPIO.gpio_write(h, MOUTH_PIN, 1)
+                print(f"DOUBLE-OPEN {time.time()}")
+                await asyncio.sleep(random.uniform(0.03, 0.09))
+
             GPIO.gpio_write(h, MOUTH_PIN, 0)
-            await asyncio.sleep(random.uniform(0.2, 0.3))
+
+            # Randomize closed duration (short or normal)
+            close_time = random.choices(
+                [random.uniform(0.04, 0.12), random.uniform(0.13, 0.28)],
+                weights=[0.4, 0.6]
+            )[0]
+            # Occasionally jitter mid-close
+            if random.random() < 0.15:
+                close_time += random.uniform(-0.02, 0.02)
+                close_time = max(0.02, close_time)
+
+            print(f"CLOSE {time.time()} for {close_time:.3f}s")
+            await asyncio.sleep(close_time)
     except asyncio.CancelledError:
         GPIO.gpio_write(h, MOUTH_PIN, 0)
 
