@@ -15,16 +15,16 @@ from billy.config import (
     ELEVENLABS_API_KEY, VOICE_ID,
     format, channels, sample_rate, chunk_duration_ms, vad
 )
-from billy.hardware import GPIO, MOUTH_PIN, HEAD_PIN, HEAD_PIN_2, h
+from billy.hardware import GPIO, MOUTH_PIN, HEAD_PIN, HEAD_PIN, h
 from billy.gpt import text_chunker
 
 # 🐟 Flap mouth & tail until cancelled
 async def continuous_billy_animation():
     # Always start with head movement (HEAD_PIN active)
     GPIO.gpio_write(h, HEAD_PIN, 1)
-    GPIO.gpio_write(h, HEAD_PIN_2, 0)
+    GPIO.gpio_write(h, HEAD_PIN, 0)
     next_swap = asyncio.get_event_loop().time() + random.uniform(3, 6)
-    tail_state = True  # True = HEAD_PIN, False = HEAD_PIN_2
+    tail_state = True  # True = HEAD_PIN, False = HEAD_PIN
 
     try:
         while True:
@@ -36,10 +36,10 @@ async def continuous_billy_animation():
                     # Turn off head (HEAD_PIN)
                     GPIO.gpio_write(h, HEAD_PIN, 0)
                     await asyncio.sleep(random.uniform(1, 2))  # Pause before tail
-                    GPIO.gpio_write(h, HEAD_PIN_2, 1)
+                    GPIO.gpio_write(h, HEAD_PIN, 1)
                 else:
-                    # Turn off tail (HEAD_PIN_2)
-                    GPIO.gpio_write(h, HEAD_PIN_2, 0)
+                    # Turn off tail (HEAD_PIN)
+                    GPIO.gpio_write(h, HEAD_PIN, 0)
                     await asyncio.sleep(random.uniform(0.5, 1))  # Pause before head
                     GPIO.gpio_write(h, HEAD_PIN, 1)
                 tail_state = not tail_state
@@ -48,7 +48,7 @@ async def continuous_billy_animation():
     except asyncio.CancelledError:
         GPIO.gpio_write(h, MOUTH_PIN, 0)
         GPIO.gpio_write(h, HEAD_PIN, 0)
-        GPIO.gpio_write(h, HEAD_PIN_2, 0)
+        GPIO.gpio_write(h, HEAD_PIN, 0)
         print("🛑 Animation cancelled.")
 
 # 🦷 Jittery, random mouth flap task
