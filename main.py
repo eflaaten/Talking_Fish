@@ -4,6 +4,26 @@ from billy.gpt import ask_billy
 from billy.tts import elevenlabs_stream
 from billy.hardware import wait_for_button
 import asyncio
+import random
+
+def get_random_timeout_quote():
+    quotes = [
+        "Sammy's swimming off for now!",
+        "Catch you later, chum!",
+        "I’m diving back into the deep end!",
+        "Sammy’s out—see you on the next wave!",
+        "Time to float away, talk soon!",
+        "I’m off to chase some minnows!",
+        "Going quiet—Sammy style!",
+        "I’ll be back when you’re ready!",
+        "Sammy’s taking a power nap!",
+        "Hasta la vista, fishy friends!",
+        "I’m off to find some tasty krill!",
+        "Taking a break from the chatter!",
+        "I’m off to explore the coral reef!",
+        "Signing off with a splash!"
+    ]
+    return random.choice(quotes)
 
 async def main():
     while True:
@@ -20,6 +40,10 @@ async def main():
                     await elevenlabs_stream(text_gen)
                 except asyncio.TimeoutError:
                     print("⏳ No input detected for 20 seconds. Returning to button press.")
+                    # Speak a random Sammy Salmon timeout quote directly (no GPT)
+                    timeout_quote = get_random_timeout_quote()
+                    from billy.tts import quote_text_gen
+                    await elevenlabs_stream(quote_text_gen(timeout_quote))
                     break  # Exit the inner loop and return to waiting for button press
         except KeyboardInterrupt:
             print("🛑 Shutting down...")

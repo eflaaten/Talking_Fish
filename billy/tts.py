@@ -176,3 +176,7 @@ async def elevenlabs_stream(text_iterator):
             animation_task.cancel()
             with suppress(asyncio.CancelledError):
                 await animation_task
+
+# 📝 Quote text generator
+async def quote_text_gen(quote):
+    yield quote
