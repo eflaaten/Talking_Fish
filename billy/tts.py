@@ -19,7 +19,7 @@ from billy.hardware import GPIO, MOUTH_PIN, TAIL_PIN, TAIL_PIN_2, PWM_PIN, h, se
 from billy.gpt import text_chunker
 
 # 🐟 Ramp tail movement
-async def ramp_tail(direction_pin, other_pin, ramp_time=0.5):
+async def ramp_tail(direction_pin, other_pin, ramp_time=0.3):
     # direction_pin: TAIL_PIN or TAIL_PIN_2
     # other_pin: the opposite pin
     steps = 20
