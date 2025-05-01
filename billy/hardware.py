@@ -43,4 +43,4 @@ def set_tail_pwm(duty_cycle):
     GPIO.tx_pwm(h, PWM_PIN, freq, duty_cycle)
 
 def stop_tail_pwm():
-    GPIO.tx_pwm(h, PWM_PIN, 0, 0)
+    GPIO.tx_pwm(h, PWM_PIN, 1000, 0)  # Use 1000 Hz, 0% duty cycle instead of freq=0

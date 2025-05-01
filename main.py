@@ -13,6 +13,7 @@ async def main():
                 try:
                     # Set a timeout for listening
                     print("🎤 Listening with VAD...")
+                    # Await the async record_and_transcribe coroutine directly so the timeout works as intended
                     prompt = await asyncio.wait_for(record_and_transcribe(), timeout=20)
                     print(f"🧠 GPT prompt: {prompt}")
                     text_gen = await ask_billy(prompt)
