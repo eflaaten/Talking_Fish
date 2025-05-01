@@ -15,40 +15,53 @@ from billy.config import (
     ELEVENLABS_API_KEY, VOICE_ID,
     format, channels, sample_rate, chunk_duration_ms, vad
 )
-from billy.hardware import GPIO, MOUTH_PIN, TAIL_PIN, TAIL_PIN_2, h
+from billy.hardware import GPIO, MOUTH_PIN, TAIL_PIN, TAIL_PIN_2, PWM_PIN, h, set_tail_pwm, stop_tail_pwm
 from billy.gpt import text_chunker
+
+# 🐟 Ramp tail movement
+async def ramp_tail(direction_pin, other_pin, ramp_time=0.5):
+    # direction_pin: TAIL_PIN or TAIL_PIN_2
+    # other_pin: the opposite pin
+    steps = 20
+    GPIO.gpio_write(h, other_pin, 0)
+    GPIO.gpio_write(h, direction_pin, 1)
+    for i in range(1, steps + 1):
+        duty = int(i * 100 / steps)
+        set_tail_pwm(duty)
+        await asyncio.sleep(ramp_time / steps)
+    # Hold at full power until released
+
+# 🐟 Stop tail movement
+async def stop_tail(direction_pin, other_pin):
+    GPIO.gpio_write(h, direction_pin, 0)
+    GPIO.gpio_write(h, other_pin, 0)
+    stop_tail_pwm()
 
 # 🐟 Flap mouth & tail until cancelled
 async def continuous_billy_animation():
     # Always start with head movement (TAIL_PIN active)
-    GPIO.gpio_write(h, TAIL_PIN, 1)
-    GPIO.gpio_write(h, TAIL_PIN_2, 0)
+    await ramp_tail(TAIL_PIN, TAIL_PIN_2)
     next_swap = asyncio.get_event_loop().time() + random.uniform(3, 6)
-    tail_state = True  # True = TAIL_PIN, False = TAIL_PIN_2
+    tail_state = True
 
     try:
         while True:
-            await asyncio.sleep(0.05)  # Just yield control
-
+            await asyncio.sleep(0.05)
             now = asyncio.get_event_loop().time()
             if now >= next_swap:
                 if tail_state:
-                    # Turn off head (TAIL_PIN)
-                    GPIO.gpio_write(h, TAIL_PIN, 0)
-                    await asyncio.sleep(random.uniform(1, 2))  # Pause before tail
-                    GPIO.gpio_write(h, TAIL_PIN_2, 1)
+                    await stop_tail(TAIL_PIN, TAIL_PIN_2)
+                    await asyncio.sleep(random.uniform(1, 2))
+                    await ramp_tail(TAIL_PIN_2, TAIL_PIN)
                 else:
-                    # Turn off tail (TAIL_PIN_2)
-                    GPIO.gpio_write(h, TAIL_PIN_2, 0)
-                    await asyncio.sleep(random.uniform(0.5, 1))  # Pause before head
-                    GPIO.gpio_write(h, TAIL_PIN, 1)
+                    await stop_tail(TAIL_PIN_2, TAIL_PIN)
+                    await asyncio.sleep(random.uniform(0.5, 1))
+                    await ramp_tail(TAIL_PIN, TAIL_PIN_2)
                 tail_state = not tail_state
                 next_swap = now + random.uniform(3, 5)
-
     except asyncio.CancelledError:
+        await stop_tail(TAIL_PIN, TAIL_PIN_2)
         GPIO.gpio_write(h, MOUTH_PIN, 0)
-        GPIO.gpio_write(h, TAIL_PIN, 0)
-        GPIO.gpio_write(h, TAIL_PIN_2, 0)
         print("🛑 Animation cancelled.")
 
 # 🦷 Jittery, random mouth flap task
