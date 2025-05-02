@@ -5,6 +5,7 @@ from billy.tts import elevenlabs_stream
 from billy.hardware import wait_for_button
 import asyncio
 import random
+import sounddevice as sd
 
 def get_random_timeout_quote():
     quotes = [
@@ -50,6 +51,13 @@ async def main():
             break
 
 if __name__ == "__main__":
+    print("\n=== Available audio devices (PyAudio) ===")
+    import pyaudio
+    pa = pyaudio.PyAudio()
+    for i in range(pa.get_device_count()):
+        print(f"{i}: {pa.get_device_info_by_index(i)}")
+    pa.terminate()
+    print("=== End of device list ===\n")
     try:
         asyncio.run(main())
     except KeyboardInterrupt:

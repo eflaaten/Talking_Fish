@@ -22,10 +22,10 @@ sclient = OpenAI(api_key=OPENAI_API_KEY)
 
 # 🎙 Audio Settings
 format = 8  # Equivalent to pyaudio.paInt16
-sample_rate = 16000
-chunk_duration_ms = 30
+sample_rate = 48000
+chunk_duration_ms = 10
 silence_duration_ms = 800
-channels = 1
+channels = 2
 frames = collections.deque()
 threshold = 1000
 vad = webrtcvad.Vad(1)

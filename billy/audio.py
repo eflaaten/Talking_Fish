@@ -13,12 +13,39 @@ from billy.config import (
     channels, frames, threshold, vad, sclient
 )
 
+# Helper to select a likely working input/output device index for PyAudio
+def get_pyaudio_device(kind='output'):
+    # Always use BY Y02: USB Audio (index 1) for both input and output
+    return 1
+
+def get_pyaudio_device_index(name_substring, kind='output'):
+    import pyaudio
+    pa = pyaudio.PyAudio()
+    for i in range(pa.get_device_count()):
+        info = pa.get_device_info_by_index(i)
+        if name_substring in info['name'] and (
+            (kind == 'output' and info['maxOutputChannels'] > 0) or
+            (kind == 'input' and info['maxInputChannels'] > 0)
+        ):
+            pa.terminate()
+            return i
+    pa.terminate()
+    return None
+
 # 🎙 Record & Transcribe User Speech
 async def record_and_transcribe(timeout=20):
     frames.clear()  # 🧽 Clean up old frames
+    import pyaudio
+    input_device = get_pyaudio_device('input')
     audio = pyaudio.PyAudio()
-    stream = audio.open(format=format, channels=channels, rate=sample_rate, input=True,
-                        frames_per_buffer=int(sample_rate * chunk_duration_ms / 1000))
+    try:
+        stream = audio.open(format=format, channels=channels, rate=sample_rate, input=True,
+                            frames_per_buffer=int(sample_rate * chunk_duration_ms / 1000),
+                            input_device_index=input_device)
+    except Exception as e:
+        print(f"[AUDIO ERROR] Could not open input device: {e}")
+        print("Try running the program and selecting a different input device.")
+        return "[AUDIO ERROR] No input device available."
 
     try:
         speaking = False
@@ -32,7 +59,25 @@ async def record_and_transcribe(timeout=20):
             if not speaking and (time.monotonic() - start_time) > timeout:
                 print(f"⏳ No speech detected for {timeout} seconds. Timing out.")
                 raise asyncio.TimeoutError("No speech detected within timeout.")
-            chunk = stream.read(int(sample_rate * chunk_duration_ms / 1000))
+            try:
+                chunk = stream.read(int(sample_rate * chunk_duration_ms / 1000), exception_on_overflow=False)
+            except Exception as e:
+                print(f"[AUDIO WARNING] Input overflowed or error: {e}")
+                # Try to recover by stopping and restarting the stream
+                try:
+                    stream.stop_stream()
+                    stream.close()
+                except Exception:
+                    pass
+                try:
+                    stream = audio.open(format=format, channels=channels, rate=sample_rate, input=True,
+                                       frames_per_buffer=int(sample_rate * chunk_duration_ms / 1000),
+                                       input_device_index=input_device)
+                except Exception as e2:
+                    print(f"[AUDIO ERROR] Could not recover input device: {e2}")
+                    return "[AUDIO ERROR] No input device available."
+                await asyncio.sleep(0.05)
+                continue
             volume = audioop.rms(chunk, 2)
             is_speech = vad.is_speech(chunk, sample_rate) and volume > threshold
 
@@ -63,6 +108,9 @@ async def record_and_transcribe(timeout=20):
         return transcript.text
     finally:
         # Ensure proper cleanup
-        stream.stop_stream()
-        stream.close()
+        try:
+            stream.stop_stream()
+            stream.close()
+        except Exception:
+            pass
         audio.terminate()

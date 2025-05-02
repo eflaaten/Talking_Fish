@@ -17,6 +17,7 @@ from billy.config import (
 )
 from billy.hardware import GPIO, MOUTH_PIN, TAIL_PIN, TAIL_PIN_2, PWM_PIN, h, set_tail_pwm, stop_tail_pwm
 from billy.gpt import text_chunker
+from .audio import get_pyaudio_device, get_pyaudio_device_index
 
 # 🐟 Ramp tail movement
 async def ramp_tail(direction_pin, other_pin, ramp_time=0.5):
@@ -111,17 +112,36 @@ async def random_mouth_flap():
 async def play_audio(audio_stream):
     """
     Plays audio chunks while randomizing mouth animation.
+    Resamples audio to 48000 Hz and converts to stereo for output device if needed.
     """
+    import pyaudio
+    import numpy as np
+    from scipy.signal import resample
+    from .audio import get_pyaudio_device_index
+    output_device = get_pyaudio_device_index("BY Y02", kind='output')
     audio = pyaudio.PyAudio()
-    stream = audio.open(format=pyaudio.paInt16, channels=1, rate=22050, output=True)
+    output_rate = 48000
+    input_rate = 22050  # ElevenLabs output
+    channels = 1  # Use mono since ALSA test worked with mono
+    try:
+        stream = audio.open(format=pyaudio.paInt16, channels=channels, rate=output_rate, output=True,
+                            output_device_index=output_device, frames_per_buffer=2048)
+    except Exception as e:
+        print(f"[AUDIO ERROR] Could not open output device: {e}")
+        print("Try running the program and selecting a different output device.")
+        return
 
-    # Start random mouth flapping in the background
     mouth_task = asyncio.create_task(random_mouth_flap())
     loop = asyncio.get_running_loop()
 
     try:
         async for chunk in audio_stream:
-            await loop.run_in_executor(None, stream.write, chunk)
+            # Resample chunk from 22050 Hz to 48000 Hz
+            audio_np = np.frombuffer(chunk, dtype=np.int16)
+            num_samples = int(len(audio_np) * output_rate / input_rate)
+            resampled = resample(audio_np, num_samples).astype(np.int16)
+            await loop.run_in_executor(None, stream.write, resampled.tobytes())
+            await asyncio.sleep(0.01)  # Prevent buffer overrun
     finally:
         mouth_task.cancel()
         with suppress(asyncio.CancelledError):
@@ -130,7 +150,8 @@ async def play_audio(audio_stream):
         stream.stop_stream()
         stream.close()
         audio.terminate()
-        print("🔇 Audio stream closed.")
+        await asyncio.sleep(0.5)  # Give USB device time to reset
+        print("\U0001F507 Audio stream closed.")
 
 # 🎙 ElevenLabs Real-Time Speech
 async def elevenlabs_stream(text_iterator):
