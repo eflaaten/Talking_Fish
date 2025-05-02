@@ -24,7 +24,7 @@ sclient = OpenAI(api_key=OPENAI_API_KEY)
 format = 8  # Equivalent to pyaudio.paInt16
 sample_rate = 48000
 chunk_duration_ms = 10
-silence_duration_ms = 800
+silence_duration_ms = 1200
 channels = 2
 frames = collections.deque()
 threshold = 1000
