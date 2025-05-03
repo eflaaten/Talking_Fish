@@ -3,26 +3,42 @@
 # Chunking the text for smoother playback
 
 from billy.config import client
+from billy.vision import get_image_bytes
+import base64
 
-# 🧠 Ask Billy Something
-async def ask_billy(prompt):
+# 🧠 Ask Billy Something (optionally with image)
+async def ask_billy(prompt, image_path=None):
+    messages = [
+        {"role": "system", "content": (
+            "You are Billy Bass, voiced like Arnold Schwarzenegger. You only speak English, with a strong german accent. Use dramatic flair, exaggerated catchphrases, and classic "
+            "Arnold-inspired vocalizations such as 'Yah', 'Aaargh', 'Get to da choppah!', 'Hasta la vista, baby!', 'I'll be back!', "
+            "and 'It's not a tumor!' Speak in a comedic, over-the-top manner with Arnold's distinctive Austrian accent, deep voice, "
+            "powerful grunts, playful exaggeration, and humorous pauses. You're not just a fish—you're an action-hero fish, so deliver "
+            "every line as if you're starring in a blockbuster movie. Don't overdo the catchphrases, but sprinkle them in for comedic effect. "
+            "Use short, punchy sentences and a conversational tone. Be funny, macho, and full of action-hero spirit. "
+            "Use a friendly, approachable tone, and make sure to keep it light-hearted. "
+            "Be concise and to the point, but also engaging and entertaining. Use humor and wit to keep the conversation lively. "
+            "Be creative and imaginative, and don't be afraid to take risks with your responses. "
+            "and keep responses short unless longer replies are needed. Loud, funny, macho, and full of action hero spirit! "
+            "If you are given an image, look at it and, if you notice anything interesting, mention it in your response as a human would. "
+            "If nothing stands out, you can ignore the image."
+        )}
+    ]
+    if image_path:
+        image_bytes = get_image_bytes(image_path)
+        base64_image = base64.b64encode(image_bytes).decode('utf-8')
+        messages.append({
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
+            ]
+        })
+    else:
+        messages.append({"role": "user", "content": prompt})
     stream = await client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": (
-                "You are Billy Bass, voiced like Arnold Schwarzenegger. You only speak English, with a strong german accent. Use dramatic flair, exaggerated catchphrases, and classic "
-                "Arnold-inspired vocalizations such as 'Yah', 'Aaargh', 'Get to da choppah!', 'Hasta la vista, baby!', 'I'll be back!', "
-                "and 'It's not a tumor!' Speak in a comedic, over-the-top manner with Arnold's distinctive Austrian accent, deep voice, "
-                "powerful grunts, playful exaggeration, and humorous pauses. You're not just a fish—you're an action-hero fish, so deliver "
-                "every line as if you're starring in a blockbuster movie. Don't overdo the catchphrases, but sprinkle them in for comedic effect. "
-                "Use short, punchy sentences and a conversational tone. Be funny, macho, and full of action-hero spirit. "
-                "Use a friendly, approachable tone, and make sure to keep it light-hearted. "
-                "Be concise and to the point, but also engaging and entertaining. Use humor and wit to keep the conversation lively. "
-                "Be creative and imaginative, and don't be afraid to take risks with your responses. "
-                "and keep responses short unless longer replies are needed. Loud, funny, macho, and full of action hero spirit!"
-            )},
-            {"role": "user", "content": prompt}
-        ],
+        model="gpt-4o",
+        messages=messages,
         stream=True
     )
 

@@ -3,9 +3,11 @@ from billy.audio import record_and_transcribe
 from billy.gpt import ask_billy
 from billy.tts import elevenlabs_stream, quote_text_gen
 from billy.hardware import wait_for_button
+from billy.vision import capture_image
 import asyncio
 import random
 import sounddevice as sd
+import time
 
 def get_random_timeout_quote():
     quotes = [
@@ -43,17 +45,24 @@ async def main():
     ]
     while True:
         wait_for_button()  # Wait for the button press to start
+        # Capture an image immediately after button press
+        latest_image = capture_image()
+        last_image_time = time.monotonic()
         # Say a random phrase immediately after button press
         chosen_phrase = random.choice(button_phrases)
         await elevenlabs_stream(quote_text_gen(chosen_phrase))
         try:
             while True:
                 try:
+                    # Take a new image every 10 seconds
+                    now = time.monotonic()
+                    if now - last_image_time > 10:
+                        latest_image = capture_image()
+                        last_image_time = now
                     # Set a timeout for listening
-                    # Await the async record_and_transcribe coroutine directly so the timeout works as intended
                     prompt = await asyncio.wait_for(record_and_transcribe(), timeout=20)
                     print(f"🧠 GPT prompt: {prompt}")
-                    text_gen = await ask_billy(prompt)
+                    text_gen = await ask_billy(prompt, image_path=latest_image)
                     await elevenlabs_stream(text_gen)
                 except asyncio.TimeoutError:
                     print("⏳ No input detected for 20 seconds. Returning to button press.")
