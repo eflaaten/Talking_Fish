@@ -65,15 +65,17 @@ async def main():
         await elevenlabs_stream(quote_text_gen(chosen_phrase))
         try:
             def update_latest_image():
+                pass  # No longer used
+            def capture_on_speech():
                 nonlocal latest_image
                 t1 = time.time()
                 latest_image = capture_image()
-                print(f"[TIMER] Image captured before audio in {time.time() - t1:.2f}s")
+                print(f"[TIMER] Image captured at speech start in {time.time() - t1:.2f}s")
             while True:
                 try:
                     print(f"[TIMER] Starting audio record at {time.time():.2f}")
                     t2 = time.time()
-                    prompt = await asyncio.wait_for(record_and_transcribe(on_listen_start=update_latest_image), timeout=20)
+                    prompt = await asyncio.wait_for(record_and_transcribe(on_speech_start=capture_on_speech), timeout=20)
                     print(f"[TIMER] Audio + transcription took {time.time() - t2:.2f}s")
                     print(f"🧠 GPT prompt: {prompt}")
                     t3 = time.time()
@@ -95,7 +97,7 @@ async def main():
                     print("⏳ No input detected for 20 seconds. Returning to button press.")
                     timeout_quote = get_random_timeout_quote()
                     await elevenlabs_stream(quote_text_gen(timeout_quote))
-                    break  # Exit the inner loop and return to waiting for button press
+                    break
         except KeyboardInterrupt:
             print("🛑 Shutting down...")
             break

@@ -33,7 +33,7 @@ def get_pyaudio_device_index(name_substring, kind='output'):
     return None
 
 # 🎙 Record & Transcribe User Speech
-async def record_and_transcribe(timeout=20, on_listen_start=None):
+async def record_and_transcribe(timeout=20, on_listen_start=None, on_speech_start=None):
     frames.clear()  # 🧽 Clean up old frames
     import pyaudio
     input_device = get_pyaudio_device('input')
@@ -94,6 +94,8 @@ async def record_and_transcribe(timeout=20, on_listen_start=None):
             else:
                 if is_speech:
                     speaking = True
+                    if on_speech_start:
+                        on_speech_start()
                     frames.append(chunk)
 
         filename = "recording.wav"
