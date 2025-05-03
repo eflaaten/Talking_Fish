@@ -103,13 +103,6 @@ async def main():
             break
 
 if __name__ == "__main__":
-    print("\n=== Available audio devices (PyAudio) ===")
-    import pyaudio
-    pa = pyaudio.PyAudio()
-    for i in range(pa.get_device_count()):
-        print(f"{i}: {pa.get_device_info_by_index(i)}")
-    pa.terminate()
-    print("=== End of device list ===\n")
     try:
         asyncio.run(main())
     except KeyboardInterrupt:

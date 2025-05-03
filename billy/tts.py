@@ -80,7 +80,6 @@ async def random_mouth_flap():
                 open_time = max(0.02, open_time)
 
             GPIO.gpio_write(h, MOUTH_PIN, 1)
-            print(f"OPEN {time.time()} for {open_time:.3f}s")
             await asyncio.sleep(open_time)
 
             # Sometimes do a double-flap (quick close/open)
@@ -88,7 +87,6 @@ async def random_mouth_flap():
                 GPIO.gpio_write(h, MOUTH_PIN, 0)
                 await asyncio.sleep(random.uniform(0.02, 0.06))
                 GPIO.gpio_write(h, MOUTH_PIN, 1)
-                print(f"DOUBLE-OPEN {time.time()}")
                 await asyncio.sleep(random.uniform(0.03, 0.09))
 
             GPIO.gpio_write(h, MOUTH_PIN, 0)
@@ -103,7 +101,6 @@ async def random_mouth_flap():
                 close_time += random.uniform(-0.02, 0.02)
                 close_time = max(0.02, close_time)
 
-            print(f"CLOSE {time.time()} for {close_time:.3f}s")
             await asyncio.sleep(close_time)
     except asyncio.CancelledError:
         GPIO.gpio_write(h, MOUTH_PIN, 0)
