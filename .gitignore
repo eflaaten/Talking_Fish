@@ -46,7 +46,6 @@ rt*.py
 confspeak_test.py
 import pyaudio.py
 o.py
-README.md
 requirements.txt
 sox.py
 t.py
