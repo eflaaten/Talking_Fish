@@ -107,7 +107,7 @@ async def record_and_transcribe(timeout=20, on_listen_start=None, on_speech_star
 
         print("📝 Transcribing...")
         with open(filename, "rb") as f:
-            transcript = sclient.audio.transcriptions.create(model="whisper-1", file=f)
+            transcript = sclient.audio.transcriptions.create(model="whisper-1", file=f, language="en")
 
         return transcript.text
     finally:
