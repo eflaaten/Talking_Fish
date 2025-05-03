@@ -1,5 +1,6 @@
 import time
 import lgpio as GPIO
+import asyncio
 
 # 📌 GPIO Pin Assignments
 # 📌 GPIO Pin Assignments (matching your old working setup)
@@ -25,16 +26,16 @@ GPIO.gpio_write(h, TAIL_PIN, 0)   # Tail motor off
 GPIO.gpio_write(h, TAIL_PIN_2, 0) # Tail motor off
 GPIO.gpio_write(h, PWM_PIN, 0)    # PWM off
 
-# 🎬 Button Press Waiter
-def wait_for_button():
+# 🎬 Async Button Press Waiter
+async def wait_for_button():
     print("🔧 Waiting for button press...")
     while True:
         if GPIO.gpio_read(h, BUTTON_PIN) == 0:
-            time.sleep(0.1)
+            await asyncio.sleep(0.1)
             if GPIO.gpio_read(h, BUTTON_PIN) == 0:
                 print("🎬 Button pressed!")
                 return
-        time.sleep(0.1)
+        await asyncio.sleep(0.1)
 
 # 🛠 Tail PWM Control
 def set_tail_pwm(duty_cycle):

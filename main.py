@@ -46,7 +46,7 @@ async def main():
         "That tickles!"
     ]
     while True:
-        wait_for_button()  # Wait for the button press to start
+        await wait_for_button()  # Wait for the button press to start
         print(f"[TIMER] Button pressed at {time.time():.2f}")
         # Capture an image immediately after button press
         t0 = time.time()
@@ -110,3 +110,10 @@ if __name__ == "__main__":
     finally:
         from billy.hardware import h, GPIO
         GPIO.gpiochip_close(h)
+        # Gracefully close the persistent camera if open
+        try:
+            from billy.vision import picam2_instance
+            if picam2_instance is not None:
+                picam2_instance.close()
+        except Exception as e:
+            print(f"[Camera Shutdown] {e}")

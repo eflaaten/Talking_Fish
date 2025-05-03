@@ -24,7 +24,7 @@ def add_recent_memory(entry):
     mems.append(entry)
     save_memories(RECENT_MEM_FILE, mems, RECENT_LIMIT)
 
-def get_recent_memories(n=5):
+def get_recent_memories(n=3):
     return load_memories(RECENT_MEM_FILE, RECENT_LIMIT)[-n:]
 
 def add_core_memory(summary):
@@ -32,5 +32,5 @@ def add_core_memory(summary):
     mems.append(summary)
     save_memories(CORE_MEM_FILE, mems, CORE_LIMIT)
 
-def get_core_memories(n=5):
+def get_core_memories(n=3):
     return load_memories(CORE_MEM_FILE, CORE_LIMIT)[-n:]
