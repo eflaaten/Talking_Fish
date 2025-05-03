@@ -4,6 +4,8 @@ from billy.gpt import ask_billy
 from billy.tts import elevenlabs_stream, quote_text_gen
 from billy.hardware import wait_for_button
 from billy.vision import capture_image
+from billy.memory import add_recent_memory, get_recent_memories, add_core_memory, get_core_memories
+from billy.gpt import review_for_core_memory
 import asyncio
 import random
 import sounddevice as sd
@@ -48,6 +50,13 @@ async def main():
         # Capture an image immediately after button press
         latest_image = capture_image()
         last_image_time = time.monotonic()
+        # Review the most recent memory for core status
+        recent_memories = get_recent_memories(1)
+        if recent_memories:
+            mem = recent_memories[-1]
+            core_summary = await review_for_core_memory(mem['prompt'], mem['billy_response'], mem['image_summary'])
+            if core_summary.lower() != 'no':
+                add_core_memory(core_summary)
         # Say a random phrase immediately after button press
         chosen_phrase = random.choice(button_phrases)
         await elevenlabs_stream(quote_text_gen(chosen_phrase))
@@ -63,7 +72,20 @@ async def main():
                     prompt = await asyncio.wait_for(record_and_transcribe(), timeout=20)
                     print(f"🧠 GPT prompt: {prompt}")
                     text_gen = await ask_billy(prompt, image_path=latest_image)
-                    await elevenlabs_stream(text_gen)
+                    # Collect Billy's response for memory
+                    billy_response = ""
+                    async for chunk in text_gen:
+                        billy_response += chunk
+                    # For image summary, you could use a placeholder or extend GPT to summarize the image
+                    image_summary = f"Image captured at {latest_image}" if latest_image else "No image"
+                    # Add to recent memory
+                    add_recent_memory({
+                        "prompt": prompt,
+                        "billy_response": billy_response,
+                        "image_summary": image_summary
+                    })
+                    # Speak the response
+                    await elevenlabs_stream(quote_text_gen(billy_response))
                 except asyncio.TimeoutError:
                     print("⏳ No input detected for 20 seconds. Returning to button press.")
                     # Speak a random Billy Salmon timeout quote directly (no GPT)

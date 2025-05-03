@@ -51,6 +51,37 @@ async def ask_billy(prompt, image_path=None):
 
     return text_gen()
 
+# 🧠 Ask GPT if a memory is a core memory
+async def review_for_core_memory(prompt, billy_response, image_summary):
+    check_prompt = (
+        f"User said: {prompt}\n"
+        f"Billy replied: {billy_response}\n"
+        f"Image summary: {image_summary}\n"
+        "Is this a core memory for Billy? If yes, reply with a one-sentence summary. If not, reply 'No'."
+    )
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are Billy's memory assistant. If this event is at all memorable, funny, surprising, or unique, "
+                "reply with a one-sentence summary that Billy should remember forever. "
+                "Otherwise, reply 'No'. Core memories can be about interesting conversations, funny moments, or anything unusual Billy saw or heard."
+            )
+        },
+        {"role": "user", "content": check_prompt}
+    ]
+    stream = await client.chat.completions.create(
+        model="gpt-4o",
+        messages=messages,
+        stream=True
+    )
+    summary = ""
+    async for part in stream:
+        delta = part.choices[0].delta
+        if delta.content:
+            summary += delta.content
+    return summary.strip()
+
 # 🍌 Split GPT response into playable chunks
 async def text_chunker(text_iterator):
     splitters = (".", ",", "?", "!", ";", ":", "—", "-", "(", ")", "[", "]", "}", " ")
