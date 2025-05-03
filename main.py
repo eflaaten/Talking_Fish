@@ -47,8 +47,11 @@ async def main():
     ]
     while True:
         wait_for_button()  # Wait for the button press to start
+        print(f"[TIMER] Button pressed at {time.time():.2f}")
         # Capture an image immediately after button press
+        t0 = time.time()
         latest_image = capture_image()
+        print(f"[TIMER] Image captured after button press in {time.time() - t0:.2f}s")
         last_image_time = time.monotonic()
         # Review the most recent memory for core status
         recent_memories = get_recent_memories(1)
@@ -61,34 +64,35 @@ async def main():
         chosen_phrase = random.choice(button_phrases)
         await elevenlabs_stream(quote_text_gen(chosen_phrase))
         try:
+            def update_latest_image():
+                nonlocal latest_image
+                t1 = time.time()
+                latest_image = capture_image()
+                print(f"[TIMER] Image captured before audio in {time.time() - t1:.2f}s")
             while True:
                 try:
-                    # Take a new image every 10 seconds
-                    now = time.monotonic()
-                    if now - last_image_time > 10:
-                        latest_image = capture_image()
-                        last_image_time = now
-                    # Set a timeout for listening
-                    prompt = await asyncio.wait_for(record_and_transcribe(), timeout=20)
+                    print(f"[TIMER] Starting audio record at {time.time():.2f}")
+                    t2 = time.time()
+                    prompt = await asyncio.wait_for(record_and_transcribe(on_listen_start=update_latest_image), timeout=20)
+                    print(f"[TIMER] Audio + transcription took {time.time() - t2:.2f}s")
                     print(f"🧠 GPT prompt: {prompt}")
+                    t3 = time.time()
                     text_gen = await ask_billy(prompt, image_path=latest_image)
-                    # Collect Billy's response for memory
                     billy_response = ""
                     async for chunk in text_gen:
                         billy_response += chunk
-                    # For image summary, you could use a placeholder or extend GPT to summarize the image
+                    print(f"[TIMER] GPT-4o response took {time.time() - t3:.2f}s")
                     image_summary = f"Image captured at {latest_image}" if latest_image else "No image"
-                    # Add to recent memory
                     add_recent_memory({
                         "prompt": prompt,
                         "billy_response": billy_response,
                         "image_summary": image_summary
                     })
-                    # Speak the response
+                    t4 = time.time()
                     await elevenlabs_stream(quote_text_gen(billy_response))
+                    print(f"[TIMER] TTS took {time.time() - t4:.2f}s")
                 except asyncio.TimeoutError:
                     print("⏳ No input detected for 20 seconds. Returning to button press.")
-                    # Speak a random Billy Salmon timeout quote directly (no GPT)
                     timeout_quote = get_random_timeout_quote()
                     await elevenlabs_stream(quote_text_gen(timeout_quote))
                     break  # Exit the inner loop and return to waiting for button press

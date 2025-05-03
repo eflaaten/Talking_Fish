@@ -33,7 +33,7 @@ def get_pyaudio_device_index(name_substring, kind='output'):
     return None
 
 # 🎙 Record & Transcribe User Speech
-async def record_and_transcribe(timeout=20):
+async def record_and_transcribe(timeout=20, on_listen_start=None):
     frames.clear()  # 🧽 Clean up old frames
     import pyaudio
     input_device = get_pyaudio_device('input')
@@ -54,6 +54,8 @@ async def record_and_transcribe(timeout=20):
         start_time = time.monotonic()
 
         print("🎤 Listening with VAD...")
+        if on_listen_start:
+            on_listen_start()
         while True:
             # Check for timeout before any speech is detected
             if not speaking and (time.monotonic() - start_time) > timeout:
