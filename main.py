@@ -2,7 +2,7 @@
 from billy.audio import record_and_transcribe
 from billy.gpt import ask_billy
 from billy.tts import elevenlabs_stream, quote_text_gen
-from billy.hardware import wait_for_button
+from billy.hardware import wait_for_button, monitor_shutdown_button
 from billy.vision import capture_image
 from billy.memory import add_recent_memory, get_recent_memories, add_core_memory, get_core_memories
 from billy.gpt import review_for_core_memory
@@ -45,6 +45,8 @@ async def main():
         "I was just about to take a nap!",
         "That tickles!"
     ]
+    # Start shutdown button monitor in the background
+    asyncio.create_task(monitor_shutdown_button())
     while True:
         await wait_for_button()  # Wait for the button press to start
         print(f"[TIMER] Button pressed at {time.time():.2f}")
