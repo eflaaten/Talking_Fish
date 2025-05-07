@@ -12,8 +12,7 @@ def get_camera():
     global picam2_instance
     if picam2_instance is None:
         picam2_instance = Picamera2()
-        # Set main stream size to 640x480 for smaller, faster images
-        config = picam2_instance.create_still_configuration(main={"size": (640, 480)}, display="main")
+        config = picam2_instance.create_still_configuration(raw={"size": (640, 360)}, display="main")
         picam2_instance.configure(config)
         picam2_instance.start()
         time.sleep(0.2)  # Shorter warm-up since we keep it open

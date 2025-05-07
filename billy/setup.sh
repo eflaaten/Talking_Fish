@@ -16,16 +16,7 @@ sudo apt install -y \
     portaudio19-dev \
     python3-venv \
     python3-lgpio \
-    libatlas-base-dev \
-    python3-numpy \
-    python3-picamera2 \
-    python3-opencv \
-    libopenblas-dev \
-    liblapack-dev \
-    libhdf5-dev \
-    libffi-dev \
-    libssl-dev \
-    ffmpeg
+    libatlas-base-dev
 
 # === Create Virtual Environment ===
 echo "🍓 Creating virtual environment..."

@@ -39,7 +39,7 @@ async def main():
         "You ruined my dream!",
         "What's up?",
         "Yah?",
-        "What do you want?",
+        "Hey, what can you do for me?",
         "I was just swimming!",
         "I was dreaming of krill!",
         "I was just about to take a nap!",
@@ -53,13 +53,13 @@ async def main():
         latest_image = capture_image()
         print(f"[TIMER] Image captured after button press in {time.time() - t0:.2f}s")
         last_image_time = time.monotonic()
-        # TEMP: Disable memory/core memory review for speed test
-        # recent_memories = get_recent_memories(1)
-        # if recent_memories:
-        #     mem = recent_memories[-1]
-        #     core_summary = await review_for_core_memory(mem['prompt'], mem['billy_response'], mem['image_summary'])
-        #     if core_summary.lower() != 'no':
-        #         add_core_memory(core_summary)
+        # Review the most recent memory for core status
+        recent_memories = get_recent_memories(1)
+        if recent_memories:
+            mem = recent_memories[-1]
+            core_summary = await review_for_core_memory(mem['prompt'], mem['billy_response'], mem['image_summary'])
+            if core_summary.lower() != 'no':
+                add_core_memory(core_summary)
         # Say a random phrase immediately after button press
         chosen_phrase = random.choice(button_phrases)
         await elevenlabs_stream(quote_text_gen(chosen_phrase))
@@ -84,13 +84,12 @@ async def main():
                     async for chunk in text_gen:
                         billy_response += chunk
                     print(f"[TIMER] GPT-4o response took {time.time() - t3:.2f}s")
-                    # TEMP: Disable memory storage for speed test
-                    # image_summary = f"Image captured at {latest_image}" if latest_image else "No image"
-                    # add_recent_memory({
-                    #     "prompt": prompt,
-                    #     "billy_response": billy_response,
-                    #     "image_summary": image_summary
-                    # })
+                    image_summary = f"Image captured at {latest_image}" if latest_image else "No image"
+                    add_recent_memory({
+                        "prompt": prompt,
+                        "billy_response": billy_response,
+                        "image_summary": image_summary
+                    })
                     t4 = time.time()
                     await elevenlabs_stream(quote_text_gen(billy_response))
                     print(f"[TIMER] TTS took {time.time() - t4:.2f}s")
