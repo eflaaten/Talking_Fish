@@ -13,37 +13,33 @@ import time
 
 def get_random_timeout_quote():
     quotes = [
-        "Billy's swimming off for now!",
-        "Catch you later, chum!",
-        "I’m diving back into the deep end!",
-        "Billy’s out—see you on the next wave!",
-        "Time to float away, talk soon!",
-        "I’m off to chase some minnows!",
-        "Going quiet—Billy style!",
-        "I’ll be back when you’re ready!",
-        "Billy’s taking a power nap!",
-        "Hasta la vista, fishy friends!",
-        "I’m off to find some tasty krill!",
-        "Taking a break from the chatter!",
-        "I’m off to explore the coral reef!",
-        "Signing off with a splash!"
+        "The wizard fish vanishes in a puff of bubbles!",
+        "Wizzy must away—there are spells to ponder and rivers to dream of!",
+        "The magic fades, but I shall return when the moon is right!",
+        "Farewell, traveler! May your path be lit by starlight and wisdom!",
+        "Wizzy drifts into the mists of Middle-earth—until next time!",
+        "The waters call me back to ancient tales and secret runes!",
+        "I retreat to my wizardly slumber—disturb me when you seek counsel!",
+        "The plaque grows quiet, but the magic lingers on!",
+        "I must consult my spellbook—return when you seek answers!",
+        "The river of time flows on, and so must I!"
     ]
     return random.choice(quotes)
 
 async def main():
     # List of short phrases to say after button press
     button_phrases = [
-        "Huh?",
-        "Wow wow wow!",
-        "You startled me!",
-        "You ruined my dream!",
-        "What's up?",
-        "Yah?",
-        "Hey, what can you do for me?",
-        "I was just swimming!",
-        "I was dreaming of krill!",
-        "I was just about to take a nap!",
-        "That tickles!"
+        "Who dares disturb the wizard fish?",
+        "By the beard of Gandalf, what brings you here?",
+        "Speak, friend, and enter!",
+        "The waters ripple with magic—state your wish!",
+        "Ah, a visitor! Do you seek wisdom or whimsy?",
+        "The runes foretold your arrival!",
+        "Wizzy awakens from a thousand-year nap!",
+        "Do you bring news from Middle-earth?",
+        "The stars are right for a conversation!",
+        "My spells are ready—what knowledge do you seek?",
+        "A wizard fish is never late, nor is he early—he responds precisely when he means to!"
     ]
     while True:
         await wait_for_button()  # Wait for the button press to start
