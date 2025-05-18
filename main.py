@@ -64,18 +64,11 @@ async def main():
         chosen_phrase = random.choice(button_phrases)
         await elevenlabs_stream(quote_text_gen(chosen_phrase))
         try:
-            def update_latest_image():
-                pass  # No longer used
-            def capture_on_speech():
-                nonlocal latest_image
-                t1 = time.time()
-                latest_image = capture_image()
-                print(f"[TIMER] Image captured at speech start in {time.time() - t1:.2f}s")
             while True:
                 try:
                     print(f"[TIMER] Starting audio record at {time.time():.2f}")
                     t2 = time.time()
-                    prompt = await asyncio.wait_for(record_and_transcribe(on_speech_start=capture_on_speech), timeout=20)
+                    prompt = await asyncio.wait_for(record_and_transcribe(), timeout=20)
                     print(f"[TIMER] Audio + transcription took {time.time() - t2:.2f}s")
                     print(f"🧠 GPT prompt: {prompt}")
                     t3 = time.time()
@@ -83,7 +76,8 @@ async def main():
                     billy_response = ""
                     async for chunk in text_gen:
                         billy_response += chunk
-                    print(f"[TIMER] GPT-4o response took {time.time() - t3:.2f}s")
+                    print(f"[DEBUG] Full Groq response: '{billy_response}'")
+                    print(f"[TIMER] Groq response took {time.time() - t3:.2f}s")
                     image_summary = f"Image captured at {latest_image}" if latest_image else "No image"
                     add_recent_memory({
                         "prompt": prompt,
@@ -91,6 +85,7 @@ async def main():
                         "image_summary": image_summary
                     })
                     t4 = time.time()
+                    print(f"[DEBUG] Sending to TTS: '{billy_response}'")
                     await elevenlabs_stream(quote_text_gen(billy_response))
                     print(f"[TIMER] TTS took {time.time() - t4:.2f}s")
                 except asyncio.TimeoutError:

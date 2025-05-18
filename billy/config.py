@@ -6,7 +6,7 @@ import os
 import collections
 import webrtcvad
 from dotenv import load_dotenv
-from openai import AsyncOpenAI, OpenAI
+
 
 # 🍓 Load environment variables
 load_dotenv()
@@ -15,10 +15,17 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "n2bKrLSWHzSMKmSqczm1")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct")
 
-# 🤖 OpenAI Clients
-client = AsyncOpenAI(api_key=OPENAI_API_KEY)
-sclient = OpenAI(api_key=OPENAI_API_KEY)
+# 🤖 OpenAI Clients (for vision/memory only)
+try:
+    from openai import AsyncOpenAI, OpenAI
+    client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+    sclient = OpenAI(api_key=OPENAI_API_KEY)
+except ImportError:
+    client = None
+    sclient = None
 
 # 🎙 Audio Settings
 format = 8  # Equivalent to pyaudio.paInt16
@@ -27,8 +34,6 @@ chunk_duration_ms = 10
 silence_duration_ms = 1200
 channels = 1  # Use mono for speech recognition
 frames = collections.deque()
-threshold = 1000
+threshold = 800
 vad = webrtcvad.Vad(1)
 
-import os
-print("🔑 OPENAI Key starts with:", os.getenv("OPENAI_API_KEY", "Not loaded")[:10])

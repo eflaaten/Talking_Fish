@@ -56,6 +56,11 @@ async def record_and_transcribe(timeout=20, on_listen_start=None, on_speech_star
         print("🎤 Listening with VAD...")
         if on_listen_start:
             on_listen_start()
+
+        # Add delay to avoid picking up movement noise (e.g. servo, mouth, etc)
+        print("[VAD] Waiting 0.5s before starting to listen for speech...")
+        await asyncio.sleep(0.5)
+
         while True:
             # Check for timeout before any speech is detected
             if not speaking and (time.monotonic() - start_time) > timeout:
@@ -81,7 +86,9 @@ async def record_and_transcribe(timeout=20, on_listen_start=None, on_speech_star
                 await asyncio.sleep(0.05)
                 continue
             volume = audioop.rms(chunk, 2)
-            is_speech = vad.is_speech(chunk, sample_rate) and volume > threshold
+            vad_result = vad.is_speech(chunk, sample_rate)
+            is_speech = vad_result and volume > threshold
+            print(f"[VAD DEBUG] volume={volume} vad={vad_result} threshold={threshold} is_speech={is_speech}")
 
             if speaking:
                 frames.append(chunk)
