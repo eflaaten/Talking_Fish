@@ -150,7 +150,7 @@ async def play_audio(audio_stream):
         stream.stop_stream()
         stream.close()
         audio.terminate()
-        await asyncio.sleep(1.2)  # Give USB device time to reset
+        await asyncio.sleep(0.5)  # Give USB device time to reset
         print("\U0001F507 Audio stream closed.")
 
 # 🎙 ElevenLabs Real-Time Speech

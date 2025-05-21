@@ -65,8 +65,8 @@ async def record_and_transcribe(timeout=20, on_listen_start=None, on_speech_star
             on_listen_start()
 
         # Add delay to avoid picking up movement noise (e.g. servo, mouth, etc)
-        print("[VAD] Waiting 0.9s before starting to listen for speech...")
-        await asyncio.sleep(1.2)
+        print("[VAD] Waiting 1.3s before starting to listen for speech...")
+        await asyncio.sleep(1.3)
 
         while True:
             # Check for timeout before any speech is detected

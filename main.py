@@ -38,13 +38,13 @@ async def main():
         print(f"[TIMER] Image captured after button press in {time.time() - t0:.2f}s")
         last_image_time = time.monotonic()
         # Wait an extra 0.5s to let motors fully stop before recording audio
-        await asyncio.sleep(1.2)
+        await asyncio.sleep(0.5)
 
         # Only use Groq for time-aware greeting if late or early, else use random phrase
         now = datetime.datetime.now()
         hour = now.hour
         if hour >= 23 or hour < 5:
-            time_context = f"It's {now.strftime('%H:%M')}. It's very late. Greet the user as Billy Bass and tell them to go to bed, in your style. Keep it under 10 words"
+            time_context = f"It's {now.strftime('%H:%M')}. It's very late. Greet the user as Billy Bass and tell them to go to bed, in your style. Keep it under 15 words"
             greeting_prompt = time_context
             text_gen = await ask_billy(greeting_prompt)
             billy_greeting = ""
@@ -52,7 +52,7 @@ async def main():
                 billy_greeting += chunk
             await elevenlabs_stream(quote_text_gen(billy_greeting))
         elif 5 <= hour < 8:
-            time_context = f"It's {now.strftime('%H:%M')}. It's very early. Greet the user as Billy Bass and comment on being up so early, in your style. Keep it under 10 words."
+            time_context = f"It's {now.strftime('%H:%M')}. It's very early. Greet the user as Billy Bass and comment on being up so early, in your style. Keep it under 15 words."
             greeting_prompt = time_context
             text_gen = await ask_billy(greeting_prompt)
             billy_greeting = ""
@@ -61,7 +61,7 @@ async def main():
             await elevenlabs_stream(quote_text_gen(billy_greeting))
         else:
             # Ask Groq to generate a fun, energetic Billy Bass greeting
-            greeting_prompt = "Greet the user as Billy Bass in a fun, energetic, and playful way. Make it sound like a talking fish toy. Keep it short, under 10 words."
+            greeting_prompt = "Greet the user as Billy Bass in a fun, energetic, and playful way. Make it sound like a talking fish toy. Keep it short, under 15 words."
             text_gen = await ask_billy(greeting_prompt)
             billy_greeting = ""
             async for chunk in text_gen:

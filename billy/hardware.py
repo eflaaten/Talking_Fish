@@ -42,10 +42,16 @@ async def wait_for_button():
         await asyncio.sleep(0.1)
 
 # 🛠 Tail PWM Control
-def set_tail_pwm(duty_cycle):
+def set_tail_pwm(duty_cycle, ramp_time=0.1):
     # duty_cycle: 0-100 (%)
     freq = 1000  # 1kHz PWM frequency
-    GPIO.tx_pwm(h, PWM_PIN, freq, duty_cycle)
+    current = 0
+    steps = 10
+    step_delay = ramp_time / steps
+    for i in range(steps):
+        current = int(duty_cycle * (i + 1) / steps)
+        GPIO.tx_pwm(h, PWM_PIN, freq, current)
+        time.sleep(step_delay)
 
 def stop_tail_pwm():
     GPIO.tx_pwm(h, PWM_PIN, 1000, 0)  # Use 1000 Hz, 0% duty cycle instead of freq=0
