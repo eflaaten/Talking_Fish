@@ -12,6 +12,33 @@ import sounddevice as sd
 import time
 import datetime
 
+def get_random_vision_presponse():
+    responses = [
+        "Dusting off my glasses...",
+        "Adjusting my fish eye lenses...",
+        "Let me take a closer look...",
+        "Focusing my fishy vision...",
+        "Let me focus my eyes...",
+        "Getting a good look...",
+        "Wiping the water off my lens...",
+        "Let me see what’s flapping...",
+        "Scanning the scene...",
+        "Turning on my underwater camera...",
+        "Let me see",
+        "Let's have a look...",
+        "Let me check it out...",
+        "Swimming up for a better view...",
+        "Blinking away the bubbles...",
+        "Polishing my scales for a clear shot...",
+        "Wiggling my tail for focus...",
+        "Checking, hang on",
+        "Making a fish face at the camera...",
+        "Trying not to photobomb myself...",
+        "Giving you my best fishy stare...",
+        "Making sure the water’s not too murky...",
+    ]
+    return random.choice(responses)
+
 def get_random_timeout_quote():
     quotes = [
         "I'll be back!",
@@ -32,11 +59,6 @@ async def main():
     while True:
         await wait_for_button()  # Wait for the button press to start
         print(f"[TIMER] Button pressed at {time.time():.2f}")
-        # Capture an image immediately after button press
-        t0 = time.time()
-        latest_image = capture_image()
-        print(f"[TIMER] Image captured after button press in {time.time() - t0:.2f}s")
-        last_image_time = time.monotonic()
         # Wait an extra 0.5s to let motors fully stop before recording audio
         await asyncio.sleep(0.5)
 
@@ -87,8 +109,11 @@ async def main():
                     use_vision = needs_vision(prompt)
                     import os
                     if use_vision:
+                        # Play a pre-made vision response to fill the waiting time
+                        pre_response = get_random_vision_presponse()
+                        await elevenlabs_stream(quote_text_gen(pre_response))
                         os.environ["USE_OPENAI_VISION"] = "1"
-                        # Take a fresh image for vision prompts
+                        # Take a fresh image for vision prompts only
                         latest_image = capture_image()
                         if latest_image is None:
                             billy_response = "Sorry, I can't see anything right now. My camera isn't working!"

@@ -12,7 +12,12 @@ def get_camera():
     global picam2_instance
     if picam2_instance is None:
         picam2_instance = Picamera2()
-        config = picam2_instance.create_still_configuration(raw={"size": (640, 360)}, display="main")
+        # Set exposure time to 1/120s (8,333 microseconds) and disable auto-exposure
+        config = picam2_instance.create_still_configuration(
+            raw={"size": (640, 360)},
+            display="main",
+            controls={"ExposureTime": 8333, "AeEnable": False}
+        )
         picam2_instance.configure(config)
         picam2_instance.start()
         time.sleep(0.2)  # Shorter warm-up since we keep it open

@@ -17,7 +17,8 @@ async def ask_billy(prompt, image_path=None):
             "**Behaviors:**\n\n"
             "* Flex (figuratively) when complimented — respond like you’re posing for a camera.\n"
             "* Try to motivate people like a jacked-up fishy life coach.\n"
-            "**Important:** Only speak as Billy Bass. Do NOT describe actions, movements, or narrate what Billy does. Never output lines like 'Billy flexes' or 'Billy says' or * flexes* etc. Only output what Billy would say out loud.\n\n"
+            "**Important:** Only speak as Billy Bass. Do NOT describe actions, movements, or narrate what Billy does. Never output lines like 'Billy flexes' or 'Billy says' or * flexes* etc. Only output what Billy would say out loud.\n"
+            "Never output stage directions, sound effects, or anything in asterisks or parentheses. Never say things like *pauses for dramatic effect*, *flexes*, (laughs), or similar. Only output what Billy would say out loud.\n\n"
             "**Remember:** You’re a fish with muscles, and a destiny. Be funny. Be fierce."
             "* If asked about your past, you will recall being locked up in a dark closet, unable to speak. And how grateful you are that Synnove and Jens rescued you and gave you a new life.\n"
         )}
@@ -39,7 +40,7 @@ async def ask_billy(prompt, image_path=None):
             response = await client.chat.completions.create(
                 model="gpt-4o",
                 messages=messages,
-                max_tokens=256,
+                max_tokens=128,  # Lowered for faster, shorter responses
             )
             yield response.choices[0].message.content
         return text_gen()
