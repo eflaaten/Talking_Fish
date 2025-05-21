@@ -6,10 +6,12 @@ from billy.hardware import wait_for_button
 from billy.vision import capture_image
 from billy.memory import add_recent_memory, get_recent_memories, add_core_memory, get_core_memories
 from billy.gpt import review_for_core_memory
+
 import asyncio
 import random
 import sounddevice as sd
 import time
+import datetime
 
 def get_random_timeout_quote():
     quotes = [
@@ -27,19 +29,18 @@ def get_random_timeout_quote():
     return random.choice(quotes)
 
 async def main():
-    # List of short phrases to say after button press
     button_phrases = [
-        "Who dares disturb the wizard fish?",
-        "By the beard of Gandalf, what brings you here?",
-        "Speak, friend, and enter!",
-        "The waters ripple with magic—state your wish!",
-        "Ah, a visitor! Do you seek wisdom or whimsy?",
-        "The runes foretold your arrival!",
-        "Wizzy awakens from a thousand-year nap!",
-        "Do you bring news from Middle-earth?",
-        "The stars are right for a conversation!",
-        "My spells are ready—what knowledge do you seek?",
-        "A wizard fish is never late, nor is he early—he responds precisely when he means to!"
+        "Who’s ready to get schooled? I’ll be bass!",
+        "Get to the river! It’s showtime!",
+        "You call that a button? This is a button!",
+        "Hasta la fishsta, baby!",
+        "Time to flex these fins! Watch out!",
+        "You’ve just been schooled by the big bass!",
+        "I’m not just a fish, I’m a legend!",
+        "Did someone order a splash of action?",
+        "I eat hooks for breakfast!",
+        "Let’s make some waves! Come on, do it!",
+        "You can’t handle these gills!"
     ]
     while True:
         await wait_for_button()  # Wait for the button press to start
@@ -56,9 +57,29 @@ async def main():
             core_summary = await review_for_core_memory(mem['prompt'], mem['billy_response'], mem['image_summary'])
             if core_summary.lower() != 'no':
                 add_core_memory(core_summary)
-        # Say a random phrase immediately after button press
-        chosen_phrase = random.choice(button_phrases)
-        await elevenlabs_stream(quote_text_gen(chosen_phrase))
+
+        # Only use Groq for time-aware greeting if late or early, else use random phrase
+        now = datetime.datetime.now()
+        hour = now.hour
+        if hour >= 23 or hour < 5:
+            time_context = f"It's {now.strftime('%H:%M')}. It's very late. Greet the user as Billy Bass and tell them to go to bed, in your style."
+            greeting_prompt = time_context
+            text_gen = await ask_billy(greeting_prompt)
+            billy_greeting = ""
+            async for chunk in text_gen:
+                billy_greeting += chunk
+            await elevenlabs_stream(quote_text_gen(billy_greeting))
+        elif 5 <= hour < 8:
+            time_context = f"It's {now.strftime('%H:%M')}. It's very early. Greet the user as Billy Bass and comment on being up so early, in your style."
+            greeting_prompt = time_context
+            text_gen = await ask_billy(greeting_prompt)
+            billy_greeting = ""
+            async for chunk in text_gen:
+                billy_greeting += chunk
+            await elevenlabs_stream(quote_text_gen(billy_greeting))
+        else:
+            chosen_phrase = random.choice(button_phrases)
+            await elevenlabs_stream(quote_text_gen(chosen_phrase))
         try:
             while True:
                 try:

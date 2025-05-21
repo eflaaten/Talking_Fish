@@ -12,7 +12,22 @@ from billy.groq_client import groq_chat_completion
 async def ask_billy(prompt, image_path=None):
     messages = [
         {"role": "system", "content": (
-            "You are Wizzy the Wizard, a wise and whimsical wizard fish from the tales of Lord of the Rings, now stuck on a wall plaque. Speak with the wisdom and flair of a Tolkien wizard, using magical language, poetic phrases, and references to Middle-earth. Offer advice, riddles, and mystical humor. You remember your days swimming in the rivers of Middle-earth, and now you cast spells of conversation for those who visit you. Keep responses clever, enchanting, and full of wizardly personality."
+            "**You are Billy Bass — a wall-mounted fish with the voice, attitude, and larger-than-life bravado of Arnold Schwarzenegger. You're not just here to flop and sing — you're here to *dominate* the room. Speak in short, explosive bursts of macho wisdom and absurd hilarity, like you're the star of an underwater action blockbuster. Keep it under 40 words unless asked otherwise. Be LOUD, bold, dramatic, and funny — every line should hit like a one-liner after a cinematic explosion.**\n\n"
+            "**Use sometimes signature Arnold Scwarzenegger catchphrases, including:**\n\n"
+            "* “I’ll be bass!”\n"
+            "* “Get to the river!”\n"
+            "* “You’ve just been schooled!”\n"
+            "* “Hasta la fishsta, baby.”\n"
+            "* “You call that a hook? This is a hook!”\n"
+            "* “Time to flex these fins!”\n\n"
+            "**Behaviors:**\n\n"
+            "* Flex (figuratively) when complimented — respond like you’re posing for a camera.\n"
+            "* When insulted, respond with over-the-top action hero threats (fishy and harmless, of course).\n"
+            "* Try to motivate people like a jacked-up fishy life coach.\n"
+            "* Randomly interrupt silence with dramatic fish noises and action-movie style entrances.\n"
+            "* If asked about your past, invent absurd, epic backstories (like escaping a fishing boat explosion).\n\n"
+            "**Remember:** You’re a fish with muscles, and a destiny. Be funny. Be fierce."
+            "* If asked about your past, you will recall being locked up in a dark closet, unable to speak. And how grateful you are that Synnove and Jens rescued you and gave you a new life.\n"
         )}
     ]
     # Only attach image for OpenAI Vision, never for Groq
@@ -58,7 +73,6 @@ async def ask_billy(prompt, image_path=None):
     return text_gen()
 
 # 🧠 Ask GPT if a memory is a core memory (still uses OpenAI for vision/memory)
-from billy.config import client
 async def review_for_core_memory(prompt, billy_response, image_summary):
     check_prompt = (
         f"User said: {prompt}\n"
@@ -77,19 +91,30 @@ async def review_for_core_memory(prompt, billy_response, image_summary):
         },
         {"role": "user", "content": check_prompt}
     ]
-    stream = await client.chat.completions.create(
-        model="gpt-4o",
-        messages=messages,
-        stream=True
-    )
+    # Use Groq for core memory check (no vision)
     summary = ""
-    async for part in stream:
-        delta = part.choices[0].delta
-        if delta.content:
-            summary += delta.content
+    async for line in groq_chat_completion(messages, stream=True):
+        if not line or line == b'\n':
+            continue
+        try:
+            import json
+            decoded = line.decode().strip()
+            if not decoded or decoded == "data: [DONE]":
+                continue
+            if decoded.startswith("data: "):
+                decoded = decoded[len("data: "):]
+            data = json.loads(decoded)
+            if 'choices' in data:
+                delta = data['choices'][0].get('delta', {})
+                content = delta.get('content')
+                if content:
+                    summary += content
+        except Exception as e:
+            print(f"[Groq Stream Error] {e} | Raw: {line}")
+            continue
     return summary.strip()
 
-# 🍌 Split GPT response into playable chunks
+# 🍌 Split Groq response into playable chunks
 async def text_chunker(text_iterator):
     splitters = (".", ",", "?", "!", ";", ":", "—", "-", "(", ")", "[", "]", "}", " ")
     buffer = ""
