@@ -72,7 +72,7 @@ async def main():
                 try:
                     print(f"[TIMER] Starting audio record at {time.time():.2f}")
                     t2 = time.time()
-                    prompt = await asyncio.wait_for(record_and_transcribe(), timeout=20)
+                    prompt = await asyncio.wait_for(record_and_transcribe(), timeout=30)
                     print(f"[TIMER] Audio + transcription took {time.time() - t2:.2f}s")
                     print(f"🧠 GPT prompt: {prompt}")
                     t3 = time.time()
