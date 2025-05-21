@@ -15,6 +15,9 @@ from billy.config import (
     ELEVENLABS_API_KEY, VOICE_ID,
     format, channels, sample_rate, chunk_duration_ms, vad
 )
+
+# Debug print to confirm which ElevenLabs voice is being used
+print(f"[DEBUG] Using ElevenLabs VOICE_ID: {VOICE_ID}")
 from billy.hardware import GPIO, MOUTH_PIN, TAIL_PIN, TAIL_PIN_2, PWM_PIN, h, set_tail_pwm, stop_tail_pwm
 from billy.gpt import text_chunker
 from .audio import get_pyaudio_device, get_pyaudio_device_index
