@@ -24,45 +24,57 @@ async def ask_billy(prompt, image_path=None):
     ]
     # Only attach image for OpenAI Vision, never for Groq
     if image_path and os.getenv("USE_OPENAI_VISION") == "1":
+        # Use OpenAI Vision
+        from billy.config import client
         image_bytes = get_image_bytes(image_path)
         base64_image = base64.b64encode(image_bytes).decode('utf-8')
         messages.append({
             "role": "user",
-            "content": prompt + f"\n[Image attached: data:image/jpeg;base64,{base64_image}]"
+            "content": [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
+            ]
         })
+        async def text_gen():
+            response = await client.chat.completions.create(
+                model="gpt-4o",
+                messages=messages,
+                max_tokens=256,
+            )
+            yield response.choices[0].message.content
+        return text_gen()
     else:
         messages.append({"role": "user", "content": prompt})
 
-    # Use Groq for voice (no vision)
-    async def text_gen():
-        async for line in groq_chat_completion(messages, stream=True):
-            # Groq streams bytes, each line is a JSON object prefixed with 'data: '
-            if not line or line == b'\n':
-                continue
-            try:
-                import json
-                decoded = line.decode().strip()
-                if not decoded or decoded == "data: [DONE]":
+        async def text_gen():
+            async for line in groq_chat_completion(messages, stream=True):
+                # Groq streams bytes, each line is a JSON object prefixed with 'data: '
+                if not line or line == b'\n':
                     continue
-                if decoded.startswith("data: "):
-                    decoded = decoded[len("data: "):]
-                data = json.loads(decoded)
-                if 'error' in data:
-                    print(f"[Groq API ERROR] {data['error']}")
-                if 'choices' in data:
-                    delta = data['choices'][0].get('delta', {})
-                    content = delta.get('content')
-                    if content:
-                        print(f"🪶 Groq says: {content}")
-                        yield content
-                elif not data:
-                    print(f"[Groq API EMPTY RESPONSE] {data}")
-                else:
-                    print(f"[Groq API RAW RESPONSE] {data}")
-            except Exception as e:
-                print(f"[Groq Stream Error] {e} | Raw: {line}")
-                continue
-    return text_gen()
+                try:
+                    import json
+                    decoded = line.decode().strip()
+                    if not decoded or decoded == "data: [DONE]":
+                        continue
+                    if decoded.startswith("data: "):
+                        decoded = decoded[len("data: "):]
+                    data = json.loads(decoded)
+                    if 'error' in data:
+                        print(f"[Groq API ERROR] {data['error']}")
+                    if 'choices' in data:
+                        delta = data['choices'][0].get('delta', {})
+                        content = delta.get('content')
+                        if content:
+                            print(f"🪶 Groq says: {content}")
+                            yield content
+                    elif not data:
+                        print(f"[Groq API EMPTY RESPONSE] {data}")
+                    else:
+                        print(f"[Groq API RAW RESPONSE] {data}")
+                except Exception as e:
+                    print(f"[Groq Stream Error] {e} | Raw: {line}")
+                    continue
+        return text_gen()
 
 # 🧠 Ask GPT if a memory is a core memory (still uses OpenAI for vision/memory)
 async def review_for_core_memory(prompt, billy_response, image_summary):

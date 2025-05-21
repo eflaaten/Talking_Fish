@@ -76,13 +76,34 @@ async def main():
                     print(f"[TIMER] Audio + transcription took {time.time() - t2:.2f}s")
                     print(f"🧠 GPT prompt: {prompt}")
                     t3 = time.time()
-                    text_gen = await ask_billy(prompt, image_path=latest_image)
+                    # --- Vision keyword detection ---
+                    def needs_vision(prompt):
+                        prompt_lower = prompt.lower()
+                        vision_keywords = [
+                            "see", "look", "what is this", "can you see", "describe what you see", "what do you see", "do you see", "recognize", "vision", "picture", "photo", "image"
+                        ]
+                        return any(kw in prompt_lower for kw in vision_keywords)
+
+                    use_vision = needs_vision(prompt)
+                    import os
+                    if use_vision:
+                        os.environ["USE_OPENAI_VISION"] = "1"
+                        # Take a fresh image for vision prompts
+                        latest_image = capture_image()
+                        if latest_image is None:
+                            billy_response = "Sorry, I can't see anything right now. My camera isn't working!"
+                            await elevenlabs_stream(quote_text_gen(billy_response))
+                            continue
+                        text_gen = await ask_billy(prompt, image_path=latest_image)
+                    else:
+                        if "USE_OPENAI_VISION" in os.environ:
+                            del os.environ["USE_OPENAI_VISION"]
+                        text_gen = await ask_billy(prompt)
                     billy_response = ""
                     async for chunk in text_gen:
                         billy_response += chunk
-                    print(f"[DEBUG] Full Groq response: '{billy_response}'")
-                    print(f"[TIMER] Groq response took {time.time() - t3:.2f}s")
-                    # image_summary = f"Image captured at {latest_image}" if latest_image else "No image"
+                    print(f"[DEBUG] Full Billy response: '{billy_response}'")
+                    print(f"[TIMER] LLM response took {time.time() - t3:.2f}s")
                     t4 = time.time()
                     print(f"[DEBUG] Sending to TTS: '{billy_response}'")
                     await elevenlabs_stream(quote_text_gen(billy_response))

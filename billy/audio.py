@@ -95,7 +95,6 @@ async def record_and_transcribe(timeout=20, on_listen_start=None, on_speech_star
             volume = audioop.rms(chunk, 2)
             vad_result = vad.is_speech(chunk, sample_rate)
             is_speech = vad_result and volume > threshold
-            print(f"[VAD DEBUG] volume={volume} vad={vad_result} threshold={threshold} is_speech={is_speech}")
 
             if speaking:
                 frames.append(chunk)
