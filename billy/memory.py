@@ -4,6 +4,20 @@ from datetime import datetime
 from typing import List, Dict, Optional
 
 class MemoryManager:
+    def get_random_memory(self) -> dict:
+        """
+        Return a random memory from episodic, semantic, or summary memory.
+        Only returns non-empty memories. Returns None if all are empty.
+        """
+        import random
+        memories = []
+        for file in [self.episodic_file, self.semantic_file, self.summary_file]:
+            with open(file) as f:
+                data = json.load(f)
+                memories.extend(data)
+        if not memories:
+            return None
+        return random.choice(memories)
     """
     Mantella-inspired memory system for Billy.
     Handles episodic (conversation), semantic (facts), and summary (compressed) memories.

@@ -207,11 +207,24 @@ async def main():
                         context = memory.build_prompt_context(prompt)
                         facts = memory.get_facts(5)
                         personalization = ""
-                        if facts and random.random() < 0.3:  # Lower chance for normal replies
+                        if facts and random.random() < 0.3:
                             fact = random.choice(facts)
                             fact_text = fact.get('content') or fact.get('mood') or str(fact)
                             personalization = f"By the way, remember when you told me: '{fact_text}'? "
-                        system_prompt = f"You are Billy Bass, a talking fish. Your current mood is '{memory.get_current_mood()}'. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion. {personalization}If you know the user's pets or family, greet them by name."
+
+                        # --- Meta-memory: Occasionally reflect on a random past memory ---
+                        meta_memory = ""
+                        if random.random() < 0.2:  # 20% chance
+                            mem = memory.get_random_memory()
+                            if mem:
+                                if mem.get('type') == 'conversation':
+                                    meta_memory = f"You sometimes recall: User once said '{mem.get('user', '')}', and you replied '{mem.get('ai', '')}'. Let this memory naturally influence your reply if it fits."
+                                elif mem.get('type') == 'semantic':
+                                    meta_memory = f"You sometimes recall this fact: '{mem.get('content', '')}'. Let this memory naturally influence your reply if it fits."
+                                elif mem.get('type') == 'summary':
+                                    meta_memory = f"You sometimes recall this summary: '{mem.get('content', '')}'. Let this memory naturally influence your reply if it fits."
+
+                        system_prompt = f"You are Billy Bass, a talking fish. Your current mood is '{memory.get_current_mood()}'. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion. {personalization}{meta_memory}If you know the user's pets or family, greet them by name. IMPORTANT: Keep your reply under 100 words."
                         full_prompt = system_prompt + "\n" + context + "\n" + prompt
                         text_gen = await ask_billy(full_prompt)
                         billy_response = ""
