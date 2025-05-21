@@ -1,10 +1,12 @@
 #  Main entry point, importing your helpers and running Billy’s loop
 
+
 from billy.audio import record_and_transcribe
 from billy.gpt import ask_billy
 from billy.tts import elevenlabs_stream, quote_text_gen
 from billy.hardware import wait_for_button
 from billy.vision import capture_image
+from billy.memory import MemoryManager
 
 
 import asyncio
@@ -12,6 +14,10 @@ import random
 import sounddevice as sd
 import time
 import datetime
+
+# 1. Instantiate MemoryManager
+memory = MemoryManager()
+
 
 def get_random_vision_presponse():
     responses = [
@@ -69,7 +75,11 @@ async def main():
         if hour >= 23 or hour < 5:
             time_context = f"It's {now.strftime('%H:%M')}. It's very late. Greet the user as Billy Bass and tell them to go to bed, in your style. Keep it under 15 words"
             greeting_prompt = time_context
-            text_gen = await ask_billy(greeting_prompt)
+            # 4. Build prompt context for greeting
+            context = memory.build_prompt_context(greeting_prompt)
+            system_prompt = "You are Billy Bass, a talking fish. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion."
+            full_prompt = system_prompt + "\n" + context + "\n" + greeting_prompt
+            text_gen = await ask_billy(full_prompt)
             billy_greeting = ""
             async for chunk in text_gen:
                 billy_greeting += chunk
@@ -77,7 +87,10 @@ async def main():
         elif 5 <= hour < 8:
             time_context = f"It's {now.strftime('%H:%M')}. It's very early. Greet the user as Billy Bass and comment on being up so early, in your style. Keep it under 15 words."
             greeting_prompt = time_context
-            text_gen = await ask_billy(greeting_prompt)
+            context = memory.build_prompt_context(greeting_prompt)
+            system_prompt = "You are Billy Bass, a talking fish. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion."
+            full_prompt = system_prompt + "\n" + context + "\n" + greeting_prompt
+            text_gen = await ask_billy(full_prompt)
             billy_greeting = ""
             async for chunk in text_gen:
                 billy_greeting += chunk
@@ -85,7 +98,10 @@ async def main():
         else:
             # Ask Groq to generate a fun, energetic Billy Bass greeting
             greeting_prompt = "Greet the user as Billy Bass in a fun, energetic, and playful way. Make it sound like a talking fish toy. Keep it short, under 15 words."
-            text_gen = await ask_billy(greeting_prompt)
+            context = memory.build_prompt_context(greeting_prompt)
+            system_prompt = "You are Billy Bass, a talking fish. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion."
+            full_prompt = system_prompt + "\n" + context + "\n" + greeting_prompt
+            text_gen = await ask_billy(full_prompt)
             billy_greeting = ""
             async for chunk in text_gen:
                 billy_greeting += chunk
@@ -127,7 +143,11 @@ async def main():
                                 pass
 
                         async def get_llm_response():
-                            text_gen = await ask_billy(prompt, image_path=latest_image)
+                            # 4. Build prompt context for vision
+                            context = memory.build_prompt_context(prompt)
+                            system_prompt = "You are Billy Bass, a talking fish. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion."
+                            full_prompt = system_prompt + "\n" + context + "\n" + prompt
+                            text_gen = await ask_billy(full_prompt, image_path=latest_image)
                             billy_response = ""
                             async for chunk in text_gen:
                                 billy_response += chunk
@@ -161,19 +181,100 @@ async def main():
                     else:
                         if "USE_OPENAI_VISION" in os.environ:
                             del os.environ["USE_OPENAI_VISION"]
-                        text_gen = await ask_billy(prompt)
-                    billy_response = ""
-                    async for chunk in text_gen:
-                        billy_response += chunk
-                    print(f"[TIMER] LLM response took {time.time() - t3:.2f}s")
-                    t4 = time.time()
-                    print(f"[DEBUG] Sending to TTS: '{billy_response}'")
-                    await elevenlabs_stream(quote_text_gen(billy_response))
-                    print(f"[TIMER] TTS took {time.time() - t4:.2f}s")
+                        # 4. Build prompt context for normal prompt
+                        context = memory.build_prompt_context(prompt)
+                        system_prompt = "You are Billy Bass, a talking fish. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion."
+                        full_prompt = system_prompt + "\n" + context + "\n" + prompt
+                        text_gen = await ask_billy(full_prompt)
+                        billy_response = ""
+                        async for chunk in text_gen:
+                            billy_response += chunk
+                        print(f"[TIMER] LLM response took {time.time() - t3:.2f}s")
+                        t4 = time.time()
+                        print(f"[DEBUG] Sending to TTS: '{billy_response}'")
+                        await elevenlabs_stream(quote_text_gen(billy_response))
+                        print(f"[TIMER] TTS took {time.time() - t4:.2f}s")
+
+                    # 2. Store conversation in memory
+                    memory.add_conversation(prompt, billy_response)
+
+                    # 3. (Optional) Extract facts and summary using LLM (placeholder functions)
+                    # You can replace these with actual LLM calls for fact extraction and summarization
+                    def simple_fact_extractor(user, ai):
+                        # Placeholder: extract a fact if user says "I like ..." or "My name is ..."
+                        facts = []
+                        if "i like" in user.lower():
+                            facts.append(f"User likes {user.split('like')[-1].strip('.')}")
+                        if "my name is" in user.lower():
+                            facts.append(f"User's name is {user.split('is')[-1].strip('.')}")
+                        return facts
+
+                    def simple_summarizer(conversation):
+                        # Placeholder: summarize last exchange
+                        if conversation:
+                            last = conversation[-1]
+                            return f"Billy remembers: User said '{last['user']}', Billy replied '{last['ai']}'."
+                        return ""
+
+                    facts = memory.extract_facts_from_conversation(prompt, billy_response, simple_fact_extractor)
+                    for fact in facts:
+                        memory.add_fact(fact)
+                    # Summarize last 3 exchanges
+                    recent = memory.get_recent_conversations(3)
+                    summary = memory.summarize_conversation(recent, simple_summarizer)
+                    if summary:
+                        memory.add_summary(summary)
+
                 except asyncio.TimeoutError:
                     print("⏳ No input detected for 20 seconds. Returning to button press.")
                     timeout_quote = get_random_timeout_quote()
                     await elevenlabs_stream(quote_text_gen(timeout_quote))
+
+                    # --- LLM-based summarization and fact extraction after session timeout ---
+
+                    # 1. Gather the last session's exchanges (now using last 10 exchanges)
+                    recent_convos = memory.get_recent_conversations(10)
+                    if not recent_convos:
+                        break
+
+                    # 2. Build a dialogue string for the LLM
+                    dialogue = "".join([
+                        f"User: {c['user']}\nBilly: {c['ai']}\n" for c in recent_convos
+                    ])
+
+                    # 3. LLM prompt for summary
+                    summary_prompt = (
+                        "Summarize the following conversation between a user and Billy Bass, a talking fish. "
+                        "Capture key facts, emotional tone, and any new information about the user or Billy. "
+                        "Keep it under 2 sentences.\n\n" + dialogue
+                    )
+                    # 4. LLM prompt for fact extraction
+                    fact_prompt = (
+                        "Extract any new facts or information about the user or Billy Bass from the following conversation. "
+                        "List each fact as a short sentence.\n\n" + dialogue
+                    )
+
+                    # 5. Call LLM for summary and facts
+                    # (Assume ask_billy returns an async generator yielding the full response)
+                    # --- Summary ---
+                    summary = ""
+                    text_gen = await ask_billy(summary_prompt)
+                    async for chunk in text_gen:
+                        summary += chunk
+                    summary = summary.strip()
+                    if summary:
+                        memory.add_summary(summary)
+
+                    # --- Facts ---
+                    facts = ""
+                    text_gen = await ask_billy(fact_prompt)
+                    async for chunk in text_gen:
+                        facts += chunk
+                    # Split facts by line, filter empty
+                    for fact in [f.strip("- ").strip() for f in facts.split("\n") if f.strip()]:
+                        if fact:
+                            memory.add_fact(fact)
+
                     break
         except KeyboardInterrupt:
             print("🛑 Shutting down...")
