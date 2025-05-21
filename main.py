@@ -4,8 +4,7 @@ from billy.gpt import ask_billy
 from billy.tts import elevenlabs_stream, quote_text_gen
 from billy.hardware import wait_for_button
 from billy.vision import capture_image
-from billy.memory import add_recent_memory, get_recent_memories, add_core_memory, get_core_memories
-from billy.gpt import review_for_core_memory
+
 
 import asyncio
 import random
@@ -15,33 +14,21 @@ import datetime
 
 def get_random_timeout_quote():
     quotes = [
-        "The wizard fish vanishes in a puff of bubbles!",
-        "Wizzy must away—there are spells to ponder and rivers to dream of!",
-        "The magic fades, but I shall return when the moon is right!",
-        "Farewell, traveler! May your path be lit by starlight and wisdom!",
-        "Wizzy drifts into the mists of Middle-earth—until next time!",
-        "The waters call me back to ancient tales and secret runes!",
-        "I retreat to my wizardly slumber—disturb me when you seek counsel!",
-        "The plaque grows quiet, but the magic lingers on!",
-        "I must consult my spellbook—return when you seek answers!",
-        "The river of time flows on, and so must I!"
+        "I'll be back!",
+        "Time to get to da choppa, good bye!",
+        "Hasta la vista, baby!",
+        "Come with me if you want to live!",
+        "It’s not a tumor, it’s just goodbye!",
+        "I need a vacation!",
+        "No problemo!",
+        "Get your ass to Mars!",
+        "If it bleeds, we can kill it!",
     ]
     return random.choice(quotes)
 
 async def main():
-    button_phrases = [
-        "Who’s ready to get schooled? I’ll be bass!",
-        "Get to the river! It’s showtime!",
-        "You call that a button? This is a button!",
-        "Hasta la fishsta, baby!",
-        "Time to flex these fins! Watch out!",
-        "You’ve just been schooled by the big bass!",
-        "I’m not just a fish, I’m a legend!",
-        "Did someone order a splash of action?",
-        "I eat hooks for breakfast!",
-        "Let’s make some waves! Come on, do it!",
-        "You can’t handle these gills!"
-    ]
+    # Use Groq to generate a new greeting each time the button is pressed
+
     while True:
         await wait_for_button()  # Wait for the button press to start
         print(f"[TIMER] Button pressed at {time.time():.2f}")
@@ -50,19 +37,14 @@ async def main():
         latest_image = capture_image()
         print(f"[TIMER] Image captured after button press in {time.time() - t0:.2f}s")
         last_image_time = time.monotonic()
-        # Review the most recent memory for core status
-        recent_memories = get_recent_memories(1)
-        if recent_memories:
-            mem = recent_memories[-1]
-            core_summary = await review_for_core_memory(mem['prompt'], mem['billy_response'], mem['image_summary'])
-            if core_summary.lower() != 'no':
-                add_core_memory(core_summary)
+        # Wait an extra 0.5s to let motors fully stop before recording audio
+        await asyncio.sleep(1.2)
 
         # Only use Groq for time-aware greeting if late or early, else use random phrase
         now = datetime.datetime.now()
         hour = now.hour
         if hour >= 23 or hour < 5:
-            time_context = f"It's {now.strftime('%H:%M')}. It's very late. Greet the user as Billy Bass and tell them to go to bed, in your style."
+            time_context = f"It's {now.strftime('%H:%M')}. It's very late. Greet the user as Billy Bass and tell them to go to bed, in your style. Keep it under 10 words"
             greeting_prompt = time_context
             text_gen = await ask_billy(greeting_prompt)
             billy_greeting = ""
@@ -70,7 +52,7 @@ async def main():
                 billy_greeting += chunk
             await elevenlabs_stream(quote_text_gen(billy_greeting))
         elif 5 <= hour < 8:
-            time_context = f"It's {now.strftime('%H:%M')}. It's very early. Greet the user as Billy Bass and comment on being up so early, in your style."
+            time_context = f"It's {now.strftime('%H:%M')}. It's very early. Greet the user as Billy Bass and comment on being up so early, in your style. Keep it under 10 words."
             greeting_prompt = time_context
             text_gen = await ask_billy(greeting_prompt)
             billy_greeting = ""
@@ -78,8 +60,13 @@ async def main():
                 billy_greeting += chunk
             await elevenlabs_stream(quote_text_gen(billy_greeting))
         else:
-            chosen_phrase = random.choice(button_phrases)
-            await elevenlabs_stream(quote_text_gen(chosen_phrase))
+            # Ask Groq to generate a fun, energetic Billy Bass greeting
+            greeting_prompt = "Greet the user as Billy Bass in a fun, energetic, and playful way. Make it sound like a talking fish toy. Keep it short, under 10 words."
+            text_gen = await ask_billy(greeting_prompt)
+            billy_greeting = ""
+            async for chunk in text_gen:
+                billy_greeting += chunk
+            await elevenlabs_stream(quote_text_gen(billy_greeting))
         try:
             while True:
                 try:
@@ -95,12 +82,7 @@ async def main():
                         billy_response += chunk
                     print(f"[DEBUG] Full Groq response: '{billy_response}'")
                     print(f"[TIMER] Groq response took {time.time() - t3:.2f}s")
-                    image_summary = f"Image captured at {latest_image}" if latest_image else "No image"
-                    add_recent_memory({
-                        "prompt": prompt,
-                        "billy_response": billy_response,
-                        "image_summary": image_summary
-                    })
+                    # image_summary = f"Image captured at {latest_image}" if latest_image else "No image"
                     t4 = time.time()
                     print(f"[DEBUG] Sending to TTS: '{billy_response}'")
                     await elevenlabs_stream(quote_text_gen(billy_response))

@@ -5,7 +5,7 @@ import asyncio
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL = os.getenv("GROQ_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama3-8b-8192")
 
 async def groq_chat_completion(messages, stream=False):
     headers = {

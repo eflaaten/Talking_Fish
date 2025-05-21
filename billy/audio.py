@@ -58,8 +58,8 @@ async def record_and_transcribe(timeout=20, on_listen_start=None, on_speech_star
             on_listen_start()
 
         # Add delay to avoid picking up movement noise (e.g. servo, mouth, etc)
-        print("[VAD] Waiting 0.5s before starting to listen for speech...")
-        await asyncio.sleep(0.5)
+        print("[VAD] Waiting 0.9s before starting to listen for speech...")
+        await asyncio.sleep(1.2)
 
         while True:
             # Check for timeout before any speech is detected
@@ -105,14 +105,17 @@ async def record_and_transcribe(timeout=20, on_listen_start=None, on_speech_star
                         on_speech_start()
                     frames.append(chunk)
 
-        filename = "recording.wav"
+        # Save each recording with a unique timestamped filename
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"recording_{timestamp}.wav"
         with wave.open(filename, "wb") as wf:
             wf.setnchannels(channels)
             wf.setsampwidth(audio.get_sample_size(format))
             wf.setframerate(sample_rate)
             wf.writeframes(b''.join(frames))
 
-        print("📝 Transcribing...")
+        print(f"📝 Transcribing {filename} ...")
         with open(filename, "rb") as f:
             transcript = sclient.audio.transcriptions.create(model="whisper-1", file=f, language="en")
 
