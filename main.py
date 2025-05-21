@@ -78,7 +78,16 @@ async def main():
             greeting_prompt = time_context
             # 4. Build prompt context for greeting
             context = memory.build_prompt_context(greeting_prompt)
-            system_prompt = f"You are Billy Bass, a talking fish. Your current mood is '{memory.get_current_mood()}'. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion."
+            # Personalization: occasionally reference a past fact
+            import random
+            facts = memory.get_facts(5)
+            personalization = ""
+            if facts and random.random() < 0.5:  # 50% chance to reference a fact
+                fact = random.choice(facts)
+                # Defensive: handle both semantic and mood/fact types
+                fact_text = fact.get('content') or fact.get('mood') or str(fact)
+                personalization = f"By the way, remember when you told me: '{fact_text}'? "
+            system_prompt = f"You are Billy Bass, a talking fish. Your current mood is '{memory.get_current_mood()}'. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion. {personalization}If you know the user's pets or family, greet them by name."
             full_prompt = system_prompt + "\n" + context + "\n" + greeting_prompt
             text_gen = await ask_billy(full_prompt)
             billy_greeting = ""
@@ -89,7 +98,13 @@ async def main():
             time_context = f"It's {now.strftime('%H:%M')}. It's very early. Greet the user as Billy Bass and comment on being up so early, in your style. Keep it under 15 words."
             greeting_prompt = time_context
             context = memory.build_prompt_context(greeting_prompt)
-            system_prompt = f"You are Billy Bass, a talking fish. Your current mood is '{memory.get_current_mood()}'. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion."
+            facts = memory.get_facts(5)
+            personalization = ""
+            if facts and random.random() < 0.5:
+                fact = random.choice(facts)
+                fact_text = fact.get('content') or fact.get('mood') or str(fact)
+                personalization = f"By the way, remember when you told me: '{fact_text}'? "
+            system_prompt = f"You are Billy Bass, a talking fish. Your current mood is '{memory.get_current_mood()}'. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion. {personalization}If you know the user's pets or family, greet them by name."
             full_prompt = system_prompt + "\n" + context + "\n" + greeting_prompt
             text_gen = await ask_billy(full_prompt)
             billy_greeting = ""
@@ -100,7 +115,13 @@ async def main():
             # Ask Groq to generate a fun, energetic Billy Bass greeting
             greeting_prompt = "Greet the user as Billy Bass in a fun, energetic, and playful way. Make it sound like a talking fish toy. Keep it short, under 15 words."
             context = memory.build_prompt_context(greeting_prompt)
-            system_prompt = f"You are Billy Bass, a talking fish. Your current mood is '{memory.get_current_mood()}'. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion."
+            facts = memory.get_facts(5)
+            personalization = ""
+            if facts and random.random() < 0.5:
+                fact = random.choice(facts)
+                fact_text = fact.get('content') or fact.get('mood') or str(fact)
+                personalization = f"By the way, remember when you told me: '{fact_text}'? "
+            system_prompt = f"You are Billy Bass, a talking fish. Your current mood is '{memory.get_current_mood()}'. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion. {personalization}If you know the user's pets or family, greet them by name."
             full_prompt = system_prompt + "\n" + context + "\n" + greeting_prompt
             text_gen = await ask_billy(full_prompt)
             billy_greeting = ""
@@ -184,7 +205,13 @@ async def main():
                             del os.environ["USE_OPENAI_VISION"]
                         # 4. Build prompt context for normal prompt
                         context = memory.build_prompt_context(prompt)
-                        system_prompt = "You are Billy Bass, a talking fish. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion."
+                        facts = memory.get_facts(5)
+                        personalization = ""
+                        if facts and random.random() < 0.3:  # Lower chance for normal replies
+                            fact = random.choice(facts)
+                            fact_text = fact.get('content') or fact.get('mood') or str(fact)
+                            personalization = f"By the way, remember when you told me: '{fact_text}'? "
+                        system_prompt = f"You are Billy Bass, a talking fish. Your current mood is '{memory.get_current_mood()}'. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion. {personalization}If you know the user's pets or family, greet them by name."
                         full_prompt = system_prompt + "\n" + context + "\n" + prompt
                         text_gen = await ask_billy(full_prompt)
                         billy_response = ""

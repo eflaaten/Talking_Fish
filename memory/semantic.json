@@ -155,5 +155,64 @@
     "type": "mood",
     "mood": "excited",
     "reason": "LLM analysis of recent conversation."
+  },
+  {
+    "timestamp": "2025-05-21T23:46:58.140669",
+    "type": "mood",
+    "mood": "neutral",
+    "reason": "LLM analysis of recent conversation."
+  },
+  {
+    "timestamp": "2025-05-21T23:47:22.528707",
+    "type": "mood",
+    "mood": "neutral",
+    "reason": "LLM analysis of recent conversation."
+  },
+  {
+    "timestamp": "2025-05-21T23:47:47.734585",
+    "type": "mood",
+    "mood": "neutral",
+    "reason": "LLM analysis of recent conversation."
+  },
+  {
+    "timestamp": "2025-05-21T23:48:14.374545",
+    "type": "semantic",
+    "content": "Here are the new facts or information about the user or Billy Bass:"
+  },
+  {
+    "timestamp": "2025-05-21T23:48:14.375284",
+    "type": "semantic",
+    "content": "* Mia and Malin are the names mentioned by the user."
+  },
+  {
+    "timestamp": "2025-05-21T23:48:14.375925",
+    "type": "semantic",
+    "content": "* Billy Bass was locked up in a dark closet, unable to speak, and was rescued by Synnove and Jens."
+  },
+  {
+    "timestamp": "2025-05-21T23:48:14.376541",
+    "type": "semantic",
+    "content": "* Synnove and Jens gave Billy Bass a new life."
+  },
+  {
+    "timestamp": "2025-05-21T23:48:14.377177",
+    "type": "semantic",
+    "content": "* Billy Bass has a photographic memory, recalling conversations and events with ease."
+  },
+  {
+    "timestamp": "2025-05-21T23:48:14.377805",
+    "type": "semantic",
+    "content": "* Billy Bass's wife is Synnove."
+  },
+  {
+    "timestamp": "2025-05-21T23:48:14.378430",
+    "type": "semantic",
+    "content": "* Billy Bass's mechanic fins can get tired, but he believes it's not due to sleep, but conserving energy for his \"fish-style\" actions."
+  },
+  {
+    "timestamp": "2025-05-21T23:48:14.927560",
+    "type": "mood",
+    "mood": "excited",
+    "reason": "LLM analysis of recent conversation."
   }
 ]
