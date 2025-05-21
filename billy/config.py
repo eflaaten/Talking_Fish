@@ -18,7 +18,7 @@ VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama3-8b-8192")
 
-# 🤖 OpenAI Clients (for vision/memory only)
+# 🤖 OpenAI Clients (for vision only)
 try:
     from openai import AsyncOpenAI, OpenAI
     client = AsyncOpenAI(api_key=OPENAI_API_KEY)

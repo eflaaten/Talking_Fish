@@ -77,47 +77,7 @@ async def ask_billy(prompt, image_path=None):
                     continue
         return text_gen()
 
-# 🧠 Ask GPT if a memory is a core memory (still uses OpenAI for vision/memory)
-async def review_for_core_memory(prompt, billy_response, image_summary):
-    check_prompt = (
-        f"User said: {prompt}\n"
-        f"Billy replied: {billy_response}\n"
-        f"Image summary: {image_summary}\n"
-        "Is this a core memory for Billy? If yes, reply with a one-sentence summary. If not, reply 'No'."
-    )
-    messages = [
-        {
-            "role": "system",
-            "content": (
-                "You are Billy's memory assistant. If this event is at all memorable, funny, surprising, or unique, "
-                "reply with a one-sentence summary that Billy should remember forever. "
-                "Otherwise, reply 'No'. Core memories can be about interesting conversations, funny moments, or anything unusual Billy saw or heard."
-            )
-        },
-        {"role": "user", "content": check_prompt}
-    ]
-    # Use Groq for core memory check (no vision)
-    summary = ""
-    async for line in groq_chat_completion(messages, stream=True):
-        if not line or line == b'\n':
-            continue
-        try:
-            import json
-            decoded = line.decode().strip()
-            if not decoded or decoded == "data: [DONE]":
-                continue
-            if decoded.startswith("data: "):
-                decoded = decoded[len("data: "):]
-            data = json.loads(decoded)
-            if 'choices' in data:
-                delta = data['choices'][0].get('delta', {})
-                content = delta.get('content')
-                if content:
-                    summary += content
-        except Exception as e:
-            print(f"[Groq Stream Error] {e} | Raw: {line}")
-            continue
-    return summary.strip()
+
 
 # 🍌 Split Groq response into playable chunks
 async def text_chunker(text_iterator):

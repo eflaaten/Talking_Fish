@@ -1,4 +1,5 @@
 #  Main entry point, importing your helpers and running Billy’s loop
+
 from billy.audio import record_and_transcribe
 from billy.gpt import ask_billy
 from billy.tts import elevenlabs_stream, quote_text_gen
@@ -109,9 +110,8 @@ async def main():
                     use_vision = needs_vision(prompt)
                     import os
                     if use_vision:
-                        # Play a pre-made vision response to fill the waiting time
+                        import contextlib
                         pre_response = get_random_vision_presponse()
-                        await elevenlabs_stream(quote_text_gen(pre_response))
                         os.environ["USE_OPENAI_VISION"] = "1"
                         # Take a fresh image for vision prompts only
                         latest_image = capture_image()
@@ -119,7 +119,45 @@ async def main():
                             billy_response = "Sorry, I can't see anything right now. My camera isn't working!"
                             await elevenlabs_stream(quote_text_gen(billy_response))
                             continue
-                        text_gen = await ask_billy(prompt, image_path=latest_image)
+                        # Start TTS filler and LLM request concurrently
+                        async def tts_filler():
+                            try:
+                                await elevenlabs_stream(quote_text_gen(pre_response))
+                            except asyncio.CancelledError:
+                                pass
+
+                        async def get_llm_response():
+                            text_gen = await ask_billy(prompt, image_path=latest_image)
+                            billy_response = ""
+                            async for chunk in text_gen:
+                                billy_response += chunk
+                            return billy_response
+
+                        tts_task = asyncio.create_task(tts_filler())
+                        llm_task = asyncio.create_task(get_llm_response())
+                        done, pending = await asyncio.wait(
+                            [tts_task, llm_task],
+                            return_when=asyncio.FIRST_COMPLETED
+                        )
+                        if llm_task in done:
+                            # LLM finished first, cancel TTS filler
+                            tts_task.cancel()
+                            with contextlib.suppress(asyncio.CancelledError):
+                                await tts_task
+                            billy_response = llm_task.result()
+                            print(f"[TIMER] LLM response took {time.time() - t3:.2f}s")
+                            t4 = time.time()
+                            print(f"[DEBUG] Sending to TTS: '{billy_response}'")
+                            await elevenlabs_stream(quote_text_gen(billy_response))
+                            print(f"[TIMER] TTS took {time.time() - t4:.2f}s")
+                        else:
+                            # TTS finished first (should be rare), wait for LLM
+                            billy_response = await llm_task
+                            print(f"[TIMER] LLM response took {time.time() - t3:.2f}s")
+                            t4 = time.time()
+                            print(f"[DEBUG] Sending to TTS: '{billy_response}'")
+                            await elevenlabs_stream(quote_text_gen(billy_response))
+                            print(f"[TIMER] TTS took {time.time() - t4:.2f}s")
                     else:
                         if "USE_OPENAI_VISION" in os.environ:
                             del os.environ["USE_OPENAI_VISION"]

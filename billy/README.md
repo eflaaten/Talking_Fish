@@ -67,7 +67,7 @@ pip install -r requirements.txt
 - `billy/gpt.py` – GPT-4o integration (vision + text)
 - `billy/tts.py` – ElevenLabs TTS and mouth/tail animation
 - `billy/hardware.py` – GPIO pin setup and helpers
-- `billy/memory.py` – Recent and core memory management
+
 - `captures/` – Folder for Billy's photos (auto-ignored by git)
 
 ---
@@ -75,7 +75,7 @@ pip install -r requirements.txt
 ## 📝 Features & Notes
 
 - **Vision:** Billy takes a photo at button press and again when you start speaking, so he can comment on the latest scene.
-- **Memory:** Remembers the last 3 conversations and up to 100 "core memories" (as decided by GPT-4o).
+
 - **Performance:** Optimized for low-latency; persistent camera, low-res images, and async event loop.
 - **Audio:** Always transcribes as English for best results.
 - **Git:** The `captures/` folder is ignored by git, so Billy's photos won't clutter your commits.
