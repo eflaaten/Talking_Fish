@@ -48,10 +48,17 @@ async def record_and_transcribe(timeout=20, on_listen_start=None, on_speech_star
         return "[AUDIO ERROR] No input device available."
 
     try:
+
         speaking = False
         num_silent_chunks = 0
         max_silent_chunks = int(silence_duration_ms / chunk_duration_ms)
         start_time = time.monotonic()
+
+        # Pre-speech buffer: keep last 500ms of audio
+        import collections
+        pre_speech_ms = 500
+        pre_speech_chunks = int(pre_speech_ms / chunk_duration_ms)
+        pre_speech_buffer = collections.deque(maxlen=pre_speech_chunks)
 
         print("🎤 Listening with VAD...")
         if on_listen_start:
@@ -99,10 +106,13 @@ async def record_and_transcribe(timeout=20, on_listen_start=None, on_speech_star
                 else:
                     num_silent_chunks = 0
             else:
+                pre_speech_buffer.append(chunk)
                 if is_speech:
                     speaking = True
                     if on_speech_start:
                         on_speech_start()
+                    # Add pre-speech buffer to frames so we don't miss the start
+                    frames.extend(pre_speech_buffer)
                     frames.append(chunk)
 
         # Save each recording with a unique timestamped filename
