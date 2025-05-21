@@ -102,7 +102,6 @@ async def main():
                     billy_response = ""
                     async for chunk in text_gen:
                         billy_response += chunk
-                    print(f"[DEBUG] Full Billy response: '{billy_response}'")
                     print(f"[TIMER] LLM response took {time.time() - t3:.2f}s")
                     t4 = time.time()
                     print(f"[DEBUG] Sending to TTS: '{billy_response}'")
