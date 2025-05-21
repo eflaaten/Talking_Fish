@@ -83,5 +83,77 @@
     "timestamp": "2025-05-21T23:30:13.033366",
     "type": "semantic",
     "content": "* Billy Bass has a strong sense of humor and can use catchphrases like \"Hasta la vista, baby\" and \"Hasta la vista, babe\"."
+  },
+  {
+    "timestamp": "2025-05-21T23:39:46.384853",
+    "type": "mood",
+    "mood": "neutral",
+    "reason": "LLM analysis of recent conversation."
+  },
+  {
+    "timestamp": "2025-05-21T23:40:15.240530",
+    "type": "semantic",
+    "content": "Here are the new facts or information about the user or Billy Bass extracted from the conversation:"
+  },
+  {
+    "timestamp": "2025-05-21T23:40:15.241047",
+    "type": "semantic",
+    "content": "**User:**"
+  },
+  {
+    "timestamp": "2025-05-21T23:40:15.241478",
+    "type": "semantic",
+    "content": "* Has a wife named Jane."
+  },
+  {
+    "timestamp": "2025-05-21T23:40:15.241880",
+    "type": "semantic",
+    "content": "* Has two cats named Mia and Marlin."
+  },
+  {
+    "timestamp": "2025-05-21T23:40:15.242272",
+    "type": "semantic",
+    "content": "**Billy Bass:**"
+  },
+  {
+    "timestamp": "2025-05-21T23:40:15.242672",
+    "type": "semantic",
+    "content": "* Has a wife named Jane."
+  },
+  {
+    "timestamp": "2025-05-21T23:40:15.243073",
+    "type": "semantic",
+    "content": "* Has memories of being locked up in a dark closet unable to speak."
+  },
+  {
+    "timestamp": "2025-05-21T23:40:15.248160",
+    "type": "semantic",
+    "content": "* Was rescued by Synnove and Jens."
+  },
+  {
+    "timestamp": "2025-05-21T23:40:15.248757",
+    "type": "semantic",
+    "content": "* Recalls being locked in a dark closet waiting to be rescued by Synnove and Jens."
+  },
+  {
+    "timestamp": "2025-05-21T23:40:15.249276",
+    "type": "semantic",
+    "content": "* Remembers his first song, \"Don't Stand So Close to Me\"."
+  },
+  {
+    "timestamp": "2025-05-21T23:40:15.249777",
+    "type": "semantic",
+    "content": "* Has a legacy to build and a destiny to fulfill."
+  },
+  {
+    "timestamp": "2025-05-21T23:40:15.250273",
+    "type": "semantic",
+    "content": "* Is grateful to be free from the dark closet and to have Synnove and Jens in his life."
+  },
+  {
+    "timestamp": "2025-05-21T23:40:16.269540",
+    "type": "mood",
+    "mood": "excited",
+    "reason": "LLM analysis of recent conversation."
   }
 ]

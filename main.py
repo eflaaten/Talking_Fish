@@ -12,6 +12,7 @@ from billy.memory import MemoryManager
 import asyncio
 import random
 import sounddevice as sd
+
 import time
 import datetime
 
@@ -77,7 +78,7 @@ async def main():
             greeting_prompt = time_context
             # 4. Build prompt context for greeting
             context = memory.build_prompt_context(greeting_prompt)
-            system_prompt = "You are Billy Bass, a talking fish. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion."
+            system_prompt = f"You are Billy Bass, a talking fish. Your current mood is '{memory.get_current_mood()}'. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion."
             full_prompt = system_prompt + "\n" + context + "\n" + greeting_prompt
             text_gen = await ask_billy(full_prompt)
             billy_greeting = ""
@@ -88,7 +89,7 @@ async def main():
             time_context = f"It's {now.strftime('%H:%M')}. It's very early. Greet the user as Billy Bass and comment on being up so early, in your style. Keep it under 15 words."
             greeting_prompt = time_context
             context = memory.build_prompt_context(greeting_prompt)
-            system_prompt = "You are Billy Bass, a talking fish. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion."
+            system_prompt = f"You are Billy Bass, a talking fish. Your current mood is '{memory.get_current_mood()}'. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion."
             full_prompt = system_prompt + "\n" + context + "\n" + greeting_prompt
             text_gen = await ask_billy(full_prompt)
             billy_greeting = ""
@@ -99,7 +100,7 @@ async def main():
             # Ask Groq to generate a fun, energetic Billy Bass greeting
             greeting_prompt = "Greet the user as Billy Bass in a fun, energetic, and playful way. Make it sound like a talking fish toy. Keep it short, under 15 words."
             context = memory.build_prompt_context(greeting_prompt)
-            system_prompt = "You are Billy Bass, a talking fish. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion."
+            system_prompt = f"You are Billy Bass, a talking fish. Your current mood is '{memory.get_current_mood()}'. You are not an AI, chatbot, or computer program. You have memories, feelings, and a unique personality. If someone claims you are not real, react with confusion or emotion."
             full_prompt = system_prompt + "\n" + context + "\n" + greeting_prompt
             text_gen = await ask_billy(full_prompt)
             billy_greeting = ""
@@ -195,35 +196,17 @@ async def main():
                         await elevenlabs_stream(quote_text_gen(billy_response))
                         print(f"[TIMER] TTS took {time.time() - t4:.2f}s")
 
+
                     # 2. Store conversation in memory
                     memory.add_conversation(prompt, billy_response)
 
+                    # 2b. Update mood using LLM (analyze last 3 exchanges)
+                    recent_for_mood = memory.get_recent_conversations(3)
+                    await memory.update_mood_llm(recent_for_mood, ask_billy)
+
+
                     # 3. (Optional) Extract facts and summary using LLM (placeholder functions)
-                    # You can replace these with actual LLM calls for fact extraction and summarization
-                    def simple_fact_extractor(user, ai):
-                        # Placeholder: extract a fact if user says "I like ..." or "My name is ..."
-                        facts = []
-                        if "i like" in user.lower():
-                            facts.append(f"User likes {user.split('like')[-1].strip('.')}")
-                        if "my name is" in user.lower():
-                            facts.append(f"User's name is {user.split('is')[-1].strip('.')}")
-                        return facts
-
-                    def simple_summarizer(conversation):
-                        # Placeholder: summarize last exchange
-                        if conversation:
-                            last = conversation[-1]
-                            return f"Billy remembers: User said '{last['user']}', Billy replied '{last['ai']}'."
-                        return ""
-
-                    facts = memory.extract_facts_from_conversation(prompt, billy_response, simple_fact_extractor)
-                    for fact in facts:
-                        memory.add_fact(fact)
-                    # Summarize last 3 exchanges
-                    recent = memory.get_recent_conversations(3)
-                    summary = memory.summarize_conversation(recent, simple_summarizer)
-                    if summary:
-                        memory.add_summary(summary)
+                    # (No change here, LLM-based summary/facts handled after timeout)
 
                 except asyncio.TimeoutError:
                     print("⏳ No input detected for 20 seconds. Returning to button press.")
@@ -254,8 +237,7 @@ async def main():
                         "List each fact as a short sentence.\n\n" + dialogue
                     )
 
-                    # 5. Call LLM for summary and facts
-                    # (Assume ask_billy returns an async generator yielding the full response)
+                    # 5. Call LLM for summary, facts, and mood
                     # --- Summary ---
                     summary = ""
                     text_gen = await ask_billy(summary_prompt)
@@ -274,6 +256,9 @@ async def main():
                     for fact in [f.strip("- ").strip() for f in facts.split("\n") if f.strip()]:
                         if fact:
                             memory.add_fact(fact)
+
+                    # --- Mood (LLM-based, after session) ---
+                    await memory.update_mood_llm(recent_convos, ask_billy)
 
                     break
         except KeyboardInterrupt:

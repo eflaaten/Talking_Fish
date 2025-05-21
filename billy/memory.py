@@ -15,11 +15,51 @@ class MemoryManager:
         self.episodic_file = os.path.join(memory_dir, "episodic.json")
         self.semantic_file = os.path.join(memory_dir, "semantic.json")
         self.summary_file = os.path.join(memory_dir, "summary.json")
+        self.mood = "neutral"  # Default mood
         # Initialize files if missing
         for f in [self.episodic_file, self.semantic_file, self.summary_file]:
             if not os.path.exists(f):
                 with open(f, "w") as fp:
                     json.dump([], fp)
+
+    async def update_mood_llm(self, recent_convos, ask_billy_fn):
+        """
+        Use LLM to analyze recent conversation and set Billy's mood.
+        Stores mood as a semantic memory entry.
+        """
+        if not recent_convos:
+            return self.mood
+        dialogue = "".join([
+            f"User: {c['user']}\nBilly: {c['ai']}\n" for c in recent_convos
+        ])
+        mood_prompt = (
+            "Analyze the following conversation between a user and Billy Bass, a talking fish. "
+            "What is Billy's current mood? Reply with only one word (e.g., happy, sad, proud, angry, excited, bored, neutral, etc.).\n\n" + dialogue
+        )
+        mood = "neutral"
+        text_gen = await ask_billy_fn(mood_prompt)
+        mood_resp = ""
+        async for chunk in text_gen:
+            mood_resp += chunk
+        mood_resp = mood_resp.strip().split()[0].lower()
+        # Accept only a single word, fallback to neutral if not recognized
+        allowed = {"happy", "sad", "proud", "angry", "excited", "bored", "neutral", "confused", "tired", "playful", "grumpy", "curious", "surprised", "scared", "lonely"}
+        if mood_resp in allowed:
+            mood = mood_resp
+        else:
+            mood = "neutral"
+        self.mood = mood
+        entry = {
+            "timestamp": datetime.now().isoformat(),
+            "type": "mood",
+            "mood": mood,
+            "reason": f"LLM analysis of recent conversation."
+        }
+        self._append_entry(self.semantic_file, entry)
+        return mood
+
+    def get_current_mood(self) -> str:
+        return self.mood
 
     def add_conversation(self, user: str, ai: str):
         entry = {
